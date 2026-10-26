@@ -1,20 +1,24 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Finding with Nemo
 
-# Run and deploy your AI Studio app
+An agentic prospecting CRM for the Nebius x NVIDIA Global AI Hackathon.
+Describe your business (or what you are looking for) and a team of Nemotron models builds your
+tags, finds prospects on a map, plans your route, remembers what your salespeople say, and watches
+for change. Nothing about the industry is hard-coded: tags, tiers, categories and presets are data
+generated per organisation.
 
-This contains everything you need to run your app locally.
+Started from an earlier AI Studio prototype ("Client Pipeline & Prospecting CRM"). The state before the
+hackathon is tagged `pre-hackathon`; everything after is hackathon work.
 
-View your app in AI Studio: https://ai.studio/apps/d84a005a-1c3b-4f5e-8c0f-8c93aad1387d
+## Status
 
-## Run Locally
+Work in progress. Full architecture, model roles, setup and evaluation results will be added before submission.
 
-**Prerequisites:**  Node.js
+## Quick start
 
+```bash
+npm install
+cp .env.example .env   # fill in the keys
+npm run dev
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Licence: Apache-2.0.
