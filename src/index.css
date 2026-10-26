@@ -1,0 +1,43 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+  }
+}
+
+/* Google Maps Dark InfoWindow styling */
+.gm-style .gm-style-iw-c {
+  background-color: #12151a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  padding: 0 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
+}
+
+.gm-style .gm-style-iw-d {
+  overflow: auto !important;
+  max-width: 320px !important;
+  padding: 0 !important;
+}
+
+.gm-style .gm-style-iw-tc::after {
+  background-color: #12151a !important;
+}
+
+.gm-style .gm-ui-hover-effect {
+  filter: invert(1) !important;
+  top: 4px !important;
+  right: 4px !important;
+}

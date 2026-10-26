@@ -1,0 +1,8 @@
+{
+  "name": "Client Pipeline & Prospecting CRM",
+  "description": "Sales prospecting, pipeline management, stockist brand material push campaigns, cross-salesman collision tracking, and forecasting CRM.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
