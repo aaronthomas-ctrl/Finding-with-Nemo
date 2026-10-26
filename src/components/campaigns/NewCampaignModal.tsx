@@ -1,3 +1,4 @@
+import { apiFetch } from '../../lib/api';
 import React, { useState, useMemo } from 'react';
 import {
   X,
@@ -214,7 +215,7 @@ export function NewCampaignModal({
     if (!currentProduct) return;
     setIsGeneratingPitch(true);
     try {
-      const res = await fetch('/api/generate-campaign-pitch', {
+      const res = await apiFetch('/api/generate-campaign-pitch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

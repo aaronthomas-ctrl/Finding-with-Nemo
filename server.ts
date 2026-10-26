@@ -8,6 +8,7 @@ import { route } from './server/routes/route';
 import { enrich } from './server/routes/enrich';
 import { pitch } from './server/routes/pitch';
 import { pii } from './server/routes/pii';
+import { onboarding } from './server/routes/onboarding';
 
 const app = express();
 app.use(express.json({ limit: '2mb' }));
@@ -20,7 +21,7 @@ app.use((_req, res, next) => {
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' data: https://fonts.gstatic.com",
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://maps.googleapis.com",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://maps.googleapis.com" + (process.env.NODE_ENV !== 'production' ? ' ws://localhost:*' : ''),
     "worker-src 'self' blob:",
     "frame-ancestors 'none'",
   ].join('; '));
@@ -30,7 +31,7 @@ app.use((_req, res, next) => {
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
 // Every other API route runs as the signed-in user, so Supabase RLS applies.
-app.use('/api', requireUser, places, route, enrich, pitch, pii);
+app.use('/api', requireUser, places, route, enrich, pitch, pii, onboarding);
 
 async function startServer() {
   const port = Number(process.env.PORT || 3000);

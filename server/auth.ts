@@ -55,3 +55,4 @@ export async function requireUser(req: Request, res: Response, next: NextFunctio
 
 const WRITERS: OrgRole[] = ['owner', 'admin', 'manager', 'sales'];
 export const canWrite = (role: OrgRole) => WRITERS.includes(role);
+export const canManageRole = (role: OrgRole) => ['owner', 'admin', 'manager'].includes(role);

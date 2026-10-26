@@ -1,3 +1,4 @@
+import { apiFetch } from './api';
 import { calculateDistanceKm } from './geo';
 
 export interface RouteStop {
@@ -199,7 +200,7 @@ export async function getOptimizedRoute(
 
   // 1. Try Google Directions optimization via API
   try {
-    const res = await fetch('/api/optimize-route', {
+    const res = await apiFetch('/api/optimize-route', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

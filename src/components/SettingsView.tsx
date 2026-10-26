@@ -1,3 +1,4 @@
+import { apiFetch } from '../lib/api';
 import React, { useState, useEffect, useRef } from 'react';
 import { useLiveQuery } from '../db';
 import { db, Settings } from '../db';
@@ -50,7 +51,7 @@ export function SettingsView() {
 
       for (const c of clientsToEnrich) {
         try {
-          const response = await fetch('/api/places-search', {
+          const response = await apiFetch('/api/places-search', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ textQuery: c.name })

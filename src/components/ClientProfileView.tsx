@@ -1,3 +1,4 @@
+import { apiFetch } from '../lib/api';
 import { logActivity } from '../lib/activity';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from '../db';
@@ -191,7 +192,7 @@ export function ClientProfileView({ clientId, onClose }: { clientId?: string; on
     setSearchError(null);
 
     try {
-      const res = await fetch('/api/client-google-search', {
+      const res = await apiFetch('/api/client-google-search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

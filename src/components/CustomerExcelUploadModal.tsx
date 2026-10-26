@@ -1,3 +1,4 @@
+import { apiFetch } from '../lib/api';
 import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { 
@@ -433,7 +434,7 @@ export function CustomerExcelUploadModal({
 
       try {
         // Query customer lookup strictly by company name
-        const res = await fetch("/api/customer-lookup", {
+        const res = await apiFetch("/api/customer-lookup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ companyName: customerName.trim() })

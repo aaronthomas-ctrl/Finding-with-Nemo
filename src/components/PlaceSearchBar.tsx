@@ -1,3 +1,4 @@
+import { apiFetch } from '../lib/api';
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, MapPin, X, Loader2, Navigation, Layers, ChevronDown, Building2, Sparkles } from 'lucide-react';
 import { UAE_INDUSTRIAL_REGIONS, PresetRegion } from '../lib/geo';
@@ -68,7 +69,7 @@ export function PlaceSearchBar({
     setIsLoading(true);
     debounceTimerRef.current = setTimeout(async () => {
       try {
-        const res = await fetch('/api/geocode-place', {
+        const res = await apiFetch('/api/geocode-place', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ query: query.trim() })

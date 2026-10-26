@@ -1,3 +1,4 @@
+import { apiFetch } from '../lib/api';
 import { AgentPanel } from './AgentPanel';
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { MapArea } from './MapArea';
@@ -333,7 +334,7 @@ export function ProspectingView() {
              reqBody.pageToken = nextPageToken;
           }
 
-          const res = await fetch('/api/places-search', {
+          const res = await apiFetch('/api/places-search', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(reqBody)
@@ -406,7 +407,7 @@ export function ProspectingView() {
   const handleEnrich = async (companyId: string, website: string, name: string) => {
     setCompanies(prev => prev.map(c => c.id === companyId ? { ...c, enriching: true, enrichError: undefined } : c));
     try {
-      const res = await fetch('/api/enrich-company', {
+      const res = await apiFetch('/api/enrich-company', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ websiteUri: website, companyName: name })
@@ -432,7 +433,7 @@ export function ProspectingView() {
       });
       const existingTags = Array.from(existingTagsSet);
 
-      const res = await fetch('/api/company-insights', {
+      const res = await apiFetch('/api/company-insights', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ companyName: name, address, existingTags })

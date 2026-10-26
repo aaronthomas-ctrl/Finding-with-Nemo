@@ -1,3 +1,4 @@
+import { apiFetch } from '../lib/api';
 import React, { useState, useRef, useEffect } from 'react';
 import { Bot, Send, User, Loader2, X, MessageSquare, Maximize2, Minimize2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -74,7 +75,7 @@ export function AgentPanel({ bounds, customPath, onRefreshDB, isHidden = false }
         parts: [{ text: m.text }]
       }));
 
-      const res = await fetch('/api/agent', {
+      const res = await apiFetch('/api/agent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

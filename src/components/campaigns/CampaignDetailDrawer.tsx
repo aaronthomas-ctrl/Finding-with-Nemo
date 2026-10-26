@@ -1,3 +1,4 @@
+import { apiFetch } from '../../lib/api';
 import React, { useState } from 'react';
 import {
   X,
@@ -174,7 +175,7 @@ export function CampaignDetailDrawer({
       ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
 
       // 2. Call personalization endpoint
-      const response = await fetch('/api/personalize-pitch', {
+      const response = await apiFetch('/api/personalize-pitch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
