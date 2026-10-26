@@ -76,12 +76,13 @@ export interface IngestResult { sourceId: string; stored: number; verified: numb
  */
 export async function ingestText(
   ctx: Ctx & { userId: string },
-  opts: { text: string; kind: 'web' | 'user' | 'voice_note' | 'upload'; url?: string; title?: string; clientId?: string | null; memoryKind?: MemoryKind },
+  opts: { text: string; kind: 'web' | 'user' | 'voice_note' | 'upload'; url?: string; title?: string; clientId?: string | null; memoryKind?: MemoryKind; storeContent?: boolean },
 ): Promise<IngestResult> {
   const text = cleanText(opts.text).slice(0, 24_000);
   const src = await ctx.sb.from('sources').insert({
     org_id: ctx.orgId, kind: opts.kind === 'web' ? 'tavily' : opts.kind, url: opts.url ?? null, title: (opts.title ?? '').slice(0, 200) || null,
-    content: text, content_hash: createHash('sha256').update(text).digest('hex'),
+    // Voice transcripts are encrypted elsewhere, so the plain text is not kept on the source row.
+    content: opts.storeContent === false ? null : text, content_hash: createHash('sha256').update(text).digest('hex'),
   }).select('id').single();
   if (src.error) throw new Error(src.error.message);
   const sourceId = src.data.id as string;

@@ -13,3 +13,7 @@
 - [ ] Try memory end to end while signed in: paste a note in Memory, watch facts verify by quote, chat and see dots light up, hover citations. Built and type-checked; the Evidence Gate and poisoning filter were checked with a stub database
 - [ ] Memory layout runs on demand (UMAP in the server); wrap as a Nebius Job when deploying
 - [ ] `check_claim` (supported / contradicted / not found) is not built yet
+- [ ] Voice notes: get an NVIDIA NIM key and set ASR_BASE_URL, ASR_API_KEY, MODEL_ASR for real speech-to-text (Token Factory has none). Until then the browser transcript is used
+- [ ] Voice: record real clips in Arabic, Hindi, Malayalam, Urdu, Tagalog and English and test ASR. Text-level translation was tested: Malayalam and Urdu are flagged lower confidence (mistranslated "oat milk" in early runs)
+- [ ] Try the voice page end to end while signed in (record, upload a file, go offline and back)
+- [ ] Voice pipeline runs when the browser asks; wrap `processVoiceNote` as the Nebius voice Job

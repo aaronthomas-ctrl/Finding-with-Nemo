@@ -1,22 +1,27 @@
 import { Outlet, NavLink } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useAuth } from '../auth/AuthProvider';
+import { startVoiceSync } from '../lib/voiceQueue';
 import { LogOut } from 'lucide-react';
-import { LayoutDashboard, Users, Clock, TrendingUp, Megaphone, Settings, Map, Brain, Activity, Building2 } from 'lucide-react';
+import { LayoutDashboard, Users, Clock, TrendingUp, Megaphone, Settings, Map, Brain, Mic, Activity, Building2 } from 'lucide-react';
 
 export function AppLayout() {
   const { activeOrg, isAdmin, signOut } = useAuth();
+  useEffect(() => startVoiceSync(), []);
   const allItems = [
     { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { to: "/", icon: Map, label: "Prospecting" },
     { to: "/pipeline", icon: Users, label: "Pipeline" },
     { to: "/projects", icon: Building2, label: "Projects" },
     { to: "/memory", icon: Brain, label: "Memory" },
+    { to: "/voice", icon: Mic, label: "Voice notes" },
     { to: "/due-today", icon: Clock, label: "Due Today" },
     { to: "/predicted-demand", icon: Activity, label: "Signals" },
     { to: "/forecast", icon: TrendingUp, label: "Predicted Demand" },
     { to: "/campaigns", icon: Megaphone, label: "Campaigns" },
     { to: "/settings", icon: Settings, label: "Settings" },
   ];
+  const MOBILE = ['/', '/pipeline', '/voice', '/memory', '/due-today'];
   const navItems = allItems.filter((i) => i.to !== '/settings' || isAdmin);
 
   return (
@@ -55,7 +60,7 @@ export function AppLayout() {
 
       {/* Mobile Bottom Tab Bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#12151a] border-t border-slate-800 flex items-center justify-around z-50">
-        {navItems.map((item) => (
+        {navItems.filter((i) => MOBILE.includes(i.to)).map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
