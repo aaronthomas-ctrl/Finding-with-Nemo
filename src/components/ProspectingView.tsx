@@ -1,5 +1,6 @@
 import { apiFetch } from '../lib/api';
-import { AgentPanel } from './AgentPanel';
+import { AgentPanel, UiAction } from './AgentPanel';
+import { useNavigate } from 'react-router-dom';
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { MapArea } from './MapArea';
 import { ResultsSidebar } from './ResultsSidebar';
@@ -142,6 +143,44 @@ export function ProspectingView() {
       setRouteStops(prev => [...prev, ...newStops]);
       setOptimizedRoute(null);
       setIsRouteDrawerOpen(true);
+    }
+  };
+
+  const navigate = useNavigate();
+
+  /** The chat agent drives the screen: draw an area, show results, open a route. */
+  const handleAgentAction = async (a: UiAction) => {
+    switch (a.type) {
+      case 'draw_area':
+        setCustomPath(a.path);
+        break;
+      case 'focus_place':
+        setSearchedPlace({ id: a.name.toLowerCase().replace(/\s+/g, '-'), name: a.name, location: { lat: a.lat, lng: a.lng } });
+        break;
+      case 'show_places':
+        setCompanies(a.places.map((x) => ({
+          id: x.placeId, name: x.name, address: x.address, location: { latitude: x.lat, longitude: x.lng },
+          category: x.category || 'Other', website: x.website, region: x.region, businessStatus: 'OPERATIONAL',
+        })));
+        break;
+      case 'show_nearby':
+        setSearchedPlace({ id: 'agent-focus', name: 'Search centre', location: a.center });
+        setSearchRadiusKm(Math.min(25, Math.max(2, Math.round(a.radiusKm))));
+        break;
+      case 'open_route': {
+        const all = await db.clients.toArray();
+        const stops: RouteStop[] = a.clientIds
+          .map((id) => all.find((c: Client) => c.id === id))
+          .filter((c: Client | undefined): c is Client => !!c && typeof c.lat === 'number' && typeof c.lng === 'number')
+          .map((c: Client) => ({ id: c.id, name: c.name, address: c.address, lat: c.lat as number, lng: c.lng as number, category: c.category, phone: c.phone, status: c.status, tier: c.tier }));
+        setRouteStops(stops);
+        setOptimizedRoute(null);
+        setIsRouteDrawerOpen(true);
+        break;
+      }
+      case 'navigate':
+        navigate(a.to);
+        break;
     }
   };
 
@@ -500,6 +539,8 @@ export function ProspectingView() {
       <AgentPanel 
         bounds={bounds} 
         customPath={customPath} 
+        searchedPlace={searchedPlace}
+        onUiAction={handleAgentAction}
         onRefreshDB={() => {
            // Basic refresh for saved zones
            db.searchZones.toArray().then((zones: any) => {

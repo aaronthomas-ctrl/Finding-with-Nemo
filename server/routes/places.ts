@@ -12,7 +12,7 @@ export const places = Router();
 
 const PLACES = 'https://places.googleapis.com/v1/places:searchText';
 
-async function placesCall(req: AuthedRequest, fieldMask: string, body: Record<string, unknown>) {
+export async function placesCall(req: AuthedRequest, fieldMask: string, body: Record<string, unknown>) {
   await assertWithinQuota(req.sb, req.orgId, 'google');
   const r = await fetch(PLACES, {
     method: 'POST',

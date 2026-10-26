@@ -883,3 +883,5 @@ begin
     execute format('alter table public.%I add column if not exists metadata jsonb not null default ''{}''', t);
   end loop;
 end $$;
+-- 23. Chat messages keep the events shown with them (tool calls, proposals, UI actions, cited memories)
+alter table public.chat_messages add column if not exists metadata jsonb not null default '{}';

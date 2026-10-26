@@ -9,6 +9,7 @@ import { enrich } from './server/routes/enrich';
 import { pitch } from './server/routes/pitch';
 import { pii } from './server/routes/pii';
 import { onboarding } from './server/routes/onboarding';
+import { agent } from './server/routes/agent';
 
 const app = express();
 app.use(express.json({ limit: '2mb' }));
@@ -31,7 +32,7 @@ app.use((_req, res, next) => {
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
 // Every other API route runs as the signed-in user, so Supabase RLS applies.
-app.use('/api', requireUser, places, route, enrich, pitch, pii, onboarding);
+app.use('/api', requireUser, places, route, enrich, pitch, pii, onboarding, agent);
 
 async function startServer() {
   const port = Number(process.env.PORT || 3000);
