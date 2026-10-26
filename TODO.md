@@ -17,3 +17,6 @@
 - [ ] Voice: record real clips in Arabic, Hindi, Malayalam, Urdu, Tagalog and English and test ASR. Text-level translation was tested: Malayalam and Urdu are flagged lower confidence (mistranslated "oat milk" in early runs)
 - [ ] Try the voice page end to end while signed in (record, upload a file, go offline and back)
 - [ ] Voice pipeline runs when the browser asks; wrap `processVoiceNote` as the Nebius voice Job
+- [ ] Watchers: try Run now while signed in (add a website watcher, run twice, edit nothing, then watch a news query). Logic and prompts were tested offline: real news is flagged, page noise is ignored, an embedded instruction is ignored
+- [ ] Scheduled watchers: only Run now exists. A scheduled Nebius Job (or GitHub Actions cron) needs the service-role key and a job entry that loops orgs; `runWatchers` currently uses user-mode `notify` and `add_usage`, so the job needs a service-mode variant
+- [ ] Notifications are per user (the creator of the watcher); org-wide ones cannot be marked read under the current policy

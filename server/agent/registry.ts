@@ -4,13 +4,14 @@ import { suggestSearchTags, applySearchTags, autoTagBatch } from './tools/tags';
 import { findNearbySavedClients, getClient, whatsDueToday, updateClient, logInteraction, setFollowUp, addLead } from './tools/clients';
 import { planRoute } from './tools/routing';
 import { researchCompany, recallMemories } from './tools/research';
+import { createWatcher } from './tools/watch';
 
 export const TOOLS: ToolDef[] = [
   suggestSearchTags, applySearchTags,
   searchPlaces, drawSearchArea, saveCompanies, saveSearchZone,
   findNearbySavedClients, getClient, whatsDueToday,
   autoTagBatch, updateClient, logInteraction, setFollowUp, addLead,
-  planRoute, researchCompany, recallMemories,
+  planRoute, researchCompany, recallMemories, createWatcher,
 ];
 
 export const byName = new Map(TOOLS.map((t) => [t.name, t]));
