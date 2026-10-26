@@ -9,6 +9,7 @@ import { verifyQuote } from './evidence';
 import { ingestText } from './memory';
 import { changeCheckPrompt, changeSummaryPrompt } from './prompts/watcher';
 import { assertPublicUrl } from './security/ssrf';
+import { extractProjectCandidates, saveProjectCandidates } from './projects';
 import { cleanText, fence, screenWithPatterns } from './security/untrusted';
 
 export interface Watcher {
@@ -113,6 +114,12 @@ export async function runWatcher(
     await ingestText({ sb: ctx.sb, orgId: ctx.orgId, userId: ctx.userId }, {
       text: added, kind: 'web', url: snap.url ?? undefined, title: `Watcher: ${w.target}`, clientId: w.client_id,
     }).catch((e) => console.warn('[watcher] memory ingest failed:', e.message));
+
+    // A projects watcher also grows the project graph; links to clients stay proposals until approved.
+    if (w.kind === 'projects') {
+      const authed: any = { sb: ctx.sb, orgId: ctx.orgId, user: { id: ctx.userId } };
+      await extractProjectCandidates(authed, added).then((x) => x.candidates.length ? saveProjectCandidates(authed, x.candidates, { text: added, kind: 'web' }) : null).catch((e) => console.warn('[watcher] project extract failed:', e.message));
+    }
 
     let clientName = '';
     if (w.client_id) clientName = (await ctx.sb.from('clients').select('name').eq('id', w.client_id).maybeSingle()).data?.name ?? '';

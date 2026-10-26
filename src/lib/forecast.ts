@@ -1,4 +1,4 @@
-import { Enquiry } from '../db';
+import type { Enquiry } from '../db';
 
 export interface Prediction {
   productLine: string;
