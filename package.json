@@ -9,10 +9,11 @@
     "start": "node dist/server.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "db:apply": "node --env-file=.env scripts/apply-schema.mjs",
+    "smoke:llm": "tsx scripts/smoke-llm.ts"
   },
   "dependencies": {
-    "@google/genai": "^2.4.0",
     "@supabase/supabase-js": "^2.112.2",
     "@tailwindcss/typography": "^0.5.20",
     "@tailwindcss/vite": "^4.1.14",
@@ -28,6 +29,7 @@
     "jspdf-autotable": "^5.0.8",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
+    "openai": "^7.44.0",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "react-markdown": "^10.1.0",
@@ -41,9 +43,11 @@
     "@types/file-saver": "^2.0.7",
     "@types/google.maps": "^3.65.3",
     "@types/node": "^22.14.0",
+    "@types/pg": "^8.23.1",
     "@types/uuid": "^11.0.0",
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.25.0",
+    "pg": "^8.23.1",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
