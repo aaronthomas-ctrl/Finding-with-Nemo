@@ -6,3 +6,7 @@
 - [ ] Service-role key into Jobs only (watchers, voice, UMAP, 30-day Places cleanup)
 - [ ] NVIDIA NIM key for Nemotron ASR and the safety model (not on Token Factory)
 - [ ] Rotate all keys shared in chat after the hackathon
+- [ ] Try the chat agent end to end while signed in (tags, map search, save, route, approval cards). Built and type-checked, not yet exercised with a real login
+- [ ] Contacts are stored as one encrypted blob in `clients.metadata.contacts_enc`; move to the `contacts` table
+- [ ] Removed for now (rebuild if time): Tier 1 watch screens, warehouse stock browser, direct-push ledger. Outreach log and lean campaigns replace them
+- [ ] Phase E: memories, Evidence Gate on facts, 3D view, verifier. Phase F: voice notes. Phase G/H: watchers, notifications, project graph
