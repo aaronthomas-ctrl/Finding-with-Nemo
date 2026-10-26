@@ -2,7 +2,9 @@ import { apiFetch } from '../lib/api';
 import { logActivity } from '../lib/activity';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from '../db';
-import { db, Client, Lead, Interaction, PRODUCT_LINES } from '../db';
+import { db, Client, Lead, Interaction } from '../db';
+import { useCategories, useProductLines } from '../lib/profile';
+import { ClientPushes } from './ClientPushes';
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { 
@@ -13,9 +15,6 @@ import {
 import { QuickPicker } from './QuickPicker';
 import { computePredictions } from '../lib/forecast';
 import { OutreachButtons } from './OutreachButtons';
-import { getLocalStockPushes, getLocalBrands, getLocalWarehouseProducts, getLocalSalesmen } from '../lib/stockData';
-import { LogDirectPushModal } from './campaigns/LogDirectPushModal';
-import { StockPushLog, Brand, WarehouseProduct, Salesman } from '../types/stockist';
 import { Package, Flame, CheckCircle2 } from 'lucide-react';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -28,15 +27,13 @@ const STATUS_COLORS: Record<string, string> = {
   Blacklisted: 'bg-red-900/30 text-red-500 border-red-900/50',
 };
 
-const CATEGORIES = [
-  "EPC Contractor", "Steel Fabricator", "Oilfield & Petrochemical Services",
-  "Electromechanical/MEP", "Marine/Shipbuilding", "Welding Trade/Distributor",
-  "Trader", "Other"
-];
 
 export function ClientProfileView({ clientId, onClose }: { clientId?: string; onClose?: () => void }) {
   const { id: paramId } = useParams<{ id: string }>();
   const id = clientId || paramId;
+  const CATEGORIES = useCategories();
+  const profileLines = useProductLines();
+  const PRODUCT_LINES = profileLines.length ? profileLines : ['General'];
   const settingsData = useLiveQuery(() => db.settings.get("default"));
   const distributedBrands = settingsData?.distributedBrands || [];
   const navigate = useNavigate();
@@ -87,24 +84,7 @@ export function ClientProfileView({ clientId, onClose }: { clientId?: string; on
   const [whatTheyDoTimeout, setWhatTheyDoTimeout] = useState<any>(null);
   const [localContacts, setLocalContacts] = useState<any[]>([]);
 
-  // Stock Push State
-  const [stockPushes, setStockPushes] = useState<StockPushLog[]>([]);
-  const [allBrands, setAllBrands] = useState<Brand[]>([]);
-  const [allProducts, setAllProducts] = useState<WarehouseProduct[]>([]);
-  const [allSalesmen, setAllSalesmen] = useState<Salesman[]>([]);
-  const [showLogPushModal, setShowLogPushModal] = useState(false);
 
-  const loadPushData = () => {
-    const p = getLocalStockPushes().filter(item => item.clientId === id);
-    setStockPushes(p);
-    setAllBrands(getLocalBrands());
-    setAllProducts(getLocalWarehouseProducts());
-    setAllSalesmen(getLocalSalesmen());
-  };
-
-  useEffect(() => {
-    loadPushData();
-  }, [id]);
 
   // Lead Form
   const [showLeadForm, setShowLeadForm] = useState(false);
@@ -412,7 +392,7 @@ export function ClientProfileView({ clientId, onClose }: { clientId?: string; on
   const openEstValue = leads?.reduce((sum, l) => sum + (l.estValue || 0), 0) || 0;
 
   const t1 = client?.tier1;
-  const isAllocatedOther = t1?.allocationStatus === 'Allocated — Other Distributor';
+  const isAllocatedOther = t1?.territoryStatus === 'Allocated — Other Distributor';
   const showWarning = isAllocatedOther && t1?.allocatedProductLines?.includes(newEnquiry.productLine);
 
   return (
@@ -492,7 +472,7 @@ export function ClientProfileView({ clientId, onClose }: { clientId?: string; on
               value={client.tier}
               onChange={e => updateClient({ tier: parseInt(e.target.value) as any })}
               className="bg-slate-800 text-slate-300 border border-slate-700 text-xs font-semibold px-3 py-1.5 rounded-full outline-none appearance-none cursor-pointer hover:bg-slate-700 transition-colors"
-              title="1=EPC giants/weekly, 2=large fabricators/bi-weekly, 3=mid-size/monthly, 4=workshops/monthly"
+              title="Follow-up cadence per tier is set in Settings"
             >
               {[1, 2, 3, 4].map(t => <option key={t} value={t}>Tier {t}</option>)}
             </select>
@@ -525,7 +505,7 @@ export function ClientProfileView({ clientId, onClose }: { clientId?: string; on
               onClick={() => setActiveTab('pushes')}
               className={`pb-3 text-sm font-semibold transition-colors relative flex items-center gap-1.5 ${activeTab === 'pushes' ? 'text-blue-400' : 'text-slate-500 hover:text-slate-300'}`}
             >
-              <Package className="w-3.5 h-3.5" /> Stock Pushes ({stockPushes.length})
+              <Package className="w-3.5 h-3.5" /> Outreach log
               {activeTab === 'pushes' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-blue-500 rounded-t-full" />}
             </button>
           </div>
@@ -933,7 +913,7 @@ export function ClientProfileView({ clientId, onClose }: { clientId?: string; on
                 <div key={idx} className="flex gap-3 items-center bg-black/20 p-3 rounded-lg border border-red-900/20">
                   <input
                     type="text"
-                    placeholder="E.g. ESAB (Dealer Exclusive)"
+                    placeholder="E.g. Preferred supplier"
                     value={brand}
                     onChange={e => updateRestrictedBrand(idx, e.target.value)}
                     className="flex-1 bg-transparent border-b border-red-900/50 focus:border-red-500 outline-none text-sm px-1 py-1 text-slate-200"
@@ -989,7 +969,7 @@ export function ClientProfileView({ clientId, onClose }: { clientId?: string; on
                     value={newLead.note}
                     onChange={e => setNewLead({...newLead, note: e.target.value})}
                     className="w-full px-3 py-2 bg-[#12151a] border border-slate-700 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-amber-500"
-                    placeholder="E.g. Interested in new welding machines"
+                    placeholder="E.g. Interested in a new product"
                   />
                 </div>
                 <div>
@@ -1148,7 +1128,7 @@ export function ClientProfileView({ clientId, onClose }: { clientId?: string; on
                         value={newEnquiry.itemDescription}
                         onChange={e => setNewEnquiry({...newEnquiry, itemDescription: e.target.value})}
                         className="w-full px-3 py-2 bg-[#12151a] border border-slate-700 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-blue-500"
-                        placeholder="E.g. 300A Welding Machine"
+                        placeholder="E.g. Item or service name"
                       />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1243,134 +1223,11 @@ export function ClientProfileView({ clientId, onClose }: { clientId?: string; on
               </section>
             </div>
           ) : (
-            /* Stock Pushes Tab Content */
-            <div className="space-y-6">
-              <section className="bg-[#12151a] border border-slate-800 p-5 rounded-xl space-y-4">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                      <Package className="w-4 h-4 text-blue-400" />
-                      Warehouse Materials & Accessories Pushed to {client.name}
-                    </h3>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      Cross-salesman log of brand materials, prices offered, and collision tracking for this account.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowLogPushModal(true)}
-                    className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-blue-600/20"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Log Material Push
-                  </button>
-                </div>
-
-                {stockPushes.length === 0 ? (
-                  <div className="p-8 text-center bg-black/20 rounded-xl border border-slate-800/60 space-y-2">
-                    <Package className="w-8 h-8 text-slate-600 mx-auto" />
-                    <p className="text-xs text-slate-400">No warehouse stockist items have been pushed to this client yet.</p>
-                    <button
-                      type="button"
-                      onClick={() => setShowLogPushModal(true)}
-                      className="text-xs text-blue-400 hover:text-blue-300 font-semibold"
-                    >
-                      + Log a brand material pitch now
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {stockPushes.map((p) => {
-                      const formattedDate = new Date(p.pushedAt).toLocaleDateString('en-GB', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      });
-                      return (
-                        <div
-                          key={p.id}
-                          className="p-4 bg-black/25 rounded-xl border border-slate-800/80 space-y-2.5"
-                        >
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                            <div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-bold text-sm text-slate-100">{p.brandName}</span>
-                                <span className="text-xs font-mono text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded">
-                                  {p.sku}
-                                </span>
-                                <span
-                                  className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold ${
-                                    p.status === 'Ordered'
-                                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                                      : p.status === 'Quoted' || p.status === 'Under Negotiation'
-                                      ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                                      : p.status === 'Sample Sent'
-                                      ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                                      : 'bg-amber-500/20 text-amber-300'
-                                  }`}
-                                >
-                                  {p.status}
-                                </span>
-                              </div>
-                              <div className="text-xs font-medium text-slate-300 mt-1">
-                                {p.productName}
-                              </div>
-                            </div>
-
-                            <div className="text-right shrink-0">
-                              <div className="text-sm font-bold text-emerald-400">
-                                ${p.priceOffered} / unit
-                              </div>
-                              <div className="text-[10px] text-slate-400">{p.qtyDiscussed} units discussed</div>
-                            </div>
-                          </div>
-
-                          <div className="text-xs text-slate-400 bg-[#161a22] p-2.5 rounded-lg border border-slate-800/60 flex flex-wrap items-center justify-between gap-2">
-                            <div>
-                              <span>Pushed by: <strong className="text-slate-200">{p.salesmanName}</strong></span>
-                              <span className="mx-2 text-slate-600">•</span>
-                              <span>Channel: <strong className="text-slate-200">{p.channel}</strong></span>
-                              <span className="mx-2 text-slate-600">•</span>
-                              <span>Date: <strong className="text-slate-200">{formattedDate}</strong></span>
-                            </div>
-                            {p.campaignTitle && (
-                              <span className="text-[10px] text-blue-400 font-semibold">
-                                🎯 {p.campaignTitle}
-                              </span>
-                            )}
-                          </div>
-
-                          {p.notes && (
-                            <p className="text-xs text-slate-300 italic pl-1">
-                              "{p.notes}"
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </section>
-            </div>
+            <ClientPushes clientId={client.id} clientName={client.name} />
           )}
         </div>
       </div>
 
-      {/* Direct Push Modal */}
-      {showLogPushModal && (
-        <LogDirectPushModal
-          isOpen={showLogPushModal}
-          onClose={() => setShowLogPushModal(false)}
-          onPushLogged={() => {
-            loadPushData();
-            setShowLogPushModal(false);
-          }}
-          clients={client ? [client] : []}
-          products={allProducts}
-          brands={allBrands}
-          salesmen={allSalesmen}
-          preselectedClientId={id}
-        />
-      )}
 
       {/* Sticky Follow-up Bar */}
       <div className="absolute bottom-0 left-0 right-0 bg-[#161a20] border-t border-slate-800 p-3 sm:p-4 z-20 flex justify-between items-center shadow-[0_-10px_20px_rgba(0,0,0,0.3)]">

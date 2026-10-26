@@ -413,7 +413,7 @@ export function RouteOptimizerDrawer({
                               )}
                             </div>
                             <div className="text-[11px] text-slate-400 truncate mt-0.5">
-                              {stop.address || stop.category || 'UAE'}
+                              {stop.address || stop.category || ''}
                             </div>
                           </div>
 
@@ -561,7 +561,7 @@ export function RouteOptimizerDrawer({
                                     {stop.name}
                                   </h5>
                                   <p className="text-[11px] text-slate-400 truncate">
-                                    {stop.address || stop.category || 'UAE'}
+                                    {stop.address || stop.category || ''}
                                   </p>
                                 </div>
                               </div>

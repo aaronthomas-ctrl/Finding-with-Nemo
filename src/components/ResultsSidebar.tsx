@@ -3,33 +3,9 @@ import { CompanyResult, PolygonZone } from '../types';
 import { Search, MapPin, Phone, Globe, Building2, Clock, Info, CheckCircle, Download, ExternalLink, Plus, ShieldAlert, FileText, ChevronDown, ChevronUp, FileSpreadsheet, User, Navigation, Layers, Eye, EyeOff, Tags } from 'lucide-react';
 import { checkDuplicate, saveCompanyToPipeline } from '../lib/pipeline';
 import { useNavigate } from 'react-router-dom';
-import { AddTier1Modal } from './AddTier1Modal';
 import { PlaceSearchResult } from './PlaceSearchBar';
-import { UAE_INDUSTRIAL_REGIONS } from '../lib/geo';
+import { usePresetRegions, useSearchSuggestions } from '../lib/profile';
 
-const SEARCH_TAGS = [
-  "EPC contractor",
-  "Engineering procurement construction",
-  "EPC oil and gas",
-  "EPC industrial services",
-  "EPC mechanical contractor",
-  "EPC electrical contractor",
-  "EPC pipeline contractor",
-  "EPC turnkey projects",
-  "EPC Middle East",
-  "EPC UAE",
-  "EPC Abu Dhabi",
-  "steel fabricator",
-  "structural steel fabrication",
-  "industrial steel fabrication",
-  "metal fabrication workshop",
-  "stainless steel fabrication",
-  "steel structure fabrication",
-  "heavy steel fabrication",
-  "steel machining",
-  "steel fabrication UAE",
-  "steel fabrication Abu Dhabi"
-];
 
 interface ResultsSidebarProps {
   bounds: google.maps.LatLngBounds | null;
@@ -99,7 +75,8 @@ export function ResultsSidebar({
   const [bulkSaving, setBulkSaving] = useState(false);
   const [showTags, setShowTags] = useState(false);
   const [focusedTagIndex, setFocusedTagIndex] = useState(-1);
-  const [tier1AddingCompany, setTier1AddingCompany] = useState<CompanyResult | null>(null);
+  const presetRegions = usePresetRegions();
+  const SEARCH_TAGS = useSearchSuggestions();
   const [showSavedZonesList, setShowSavedZonesList] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const tagsRef = useRef<HTMLDivElement>(null);
@@ -554,10 +531,10 @@ export function ResultsSidebar({
               {/* Quick Preset Hubs Chips */}
               <div>
                 <span className="text-[11px] text-slate-400 font-medium block mb-1.5">
-                  Focus UAE Industrial Region:
+                  Focus area:
                 </span>
                 <div className="flex flex-wrap gap-1">
-                  {UAE_INDUSTRIAL_REGIONS.slice(0, 6).map(hub => (
+                  {presetRegions.slice(0, 6).map(hub => (
                     <button
                       key={hub.name}
                       onClick={() => {
@@ -565,7 +542,7 @@ export function ResultsSidebar({
                           onSelectPlace({
                             id: hub.name.toLowerCase().replace(/\s+/g, '-'),
                             name: hub.name,
-                            formattedAddress: `${hub.name}, ${hub.emirate}, UAE`,
+                            formattedAddress: hub.name,
                             location: { lat: hub.lat, lng: hub.lng }
                           });
                         }
@@ -573,7 +550,7 @@ export function ResultsSidebar({
                       className="text-[10px] px-2 py-1 bg-[#12151a] hover:bg-blue-600/20 text-slate-300 hover:text-blue-300 border border-slate-700 hover:border-blue-500/40 rounded transition-colors"
                       title={hub.description}
                     >
-                      {hub.name.replace(' Industrial Area', '').replace(' (Industrial City Abu Dhabi)', '').replace(' Free Zone', '')}
+                      {hub.name}
                     </button>
                   ))}
                 </div>
@@ -613,7 +590,7 @@ export function ResultsSidebar({
                 <input 
                   ref={searchInputRef}
                   type="text"
-                  placeholder={activeSearchTags.length ? "Add another keyword..." : "e.g., 'steel fabrication', 'EPC'"}
+                  placeholder={activeSearchTags.length ? "Add another keyword..." : "Type a keyword"}
                   value={currentInput}
                   onChange={(e) => {
                     setCurrentInput(e.target.value);
@@ -800,13 +777,6 @@ export function ResultsSidebar({
                       )}
                     </div>
                   )}
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setTier1AddingCompany(c); }}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity bg-amber-600/20 hover:bg-amber-600/40 text-amber-500 border border-amber-500/30 text-[10px] px-2 py-0.5 rounded whitespace-nowrap flex items-center gap-1"
-                    >
-                      <ShieldAlert className="w-3 h-3" />
-                      Add to Tier 1
-                    </button>
                   </div>
                 </div>
                 
@@ -824,9 +794,9 @@ export function ResultsSidebar({
                       Zone: {c.matchedZoneName}
                     </span>
                   )}
-                  {c.emirate && (
+                  {c.region && (
                     <span className="inline-block bg-slate-800 text-slate-300 text-[10px] px-2 py-0.5 rounded border border-slate-700">
-                      {c.emirate}
+                      {c.region}
                     </span>
                   )}
                   {c.businessStatus && c.businessStatus !== 'OPERATIONAL' && (
@@ -976,17 +946,6 @@ export function ResultsSidebar({
           )}
         </div>
       </div>
-      {tier1AddingCompany && (
-        <AddTier1Modal
-          company={tier1AddingCompany}
-          onClose={() => setTier1AddingCompany(null)}
-          onSuccess={(clientId) => {
-            setTier1AddingCompany(null);
-            alert('Saved! You can view it in the Tier 1 Watch list.');
-            // Optional: navigate(`/tier1/${clientId}`)
-          }}
-        />
-      )}
     </div>
   );
 }

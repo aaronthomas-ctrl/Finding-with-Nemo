@@ -107,7 +107,7 @@ export async function saveCompanyToPipeline(company: CompanyResult): Promise<Cli
     phone: company?.phone || '',
     website: company?.website || '',
     backgroundBlurb: company?.summary || '',
-    category: ["EPC Contractor", "Steel Fabricator", "Oilfield & Petrochemical Services", "Electromechanical/MEP", "Marine/Shipbuilding", "Welding Trade/Distributor", "Trader", "Other"].includes(company.category as string) ? company.category : "Other",
+    category: company.category || "Other",
     tier: (company.tier as 1 | 2 | 3 | 4) || 4,
     status: company.businessStatus || "New", // use businessStatus if available
     googleMapsLink: company.googleMapsUri || '',
@@ -124,10 +124,10 @@ export async function saveCompanyToPipeline(company: CompanyResult): Promise<Cli
     updatedAt: new Date(),
     tier1: {
       isWatch: false,
-      emirate: "",
+      region: "",
       primarySiteAddress: "",
       justification: "",
-      allocationStatus: "Open",
+      territoryStatus: "Open",
       allocatedTo: "",
       allocatedProductLines: []
     }

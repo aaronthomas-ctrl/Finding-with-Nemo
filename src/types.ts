@@ -1,4 +1,3 @@
-export * from './types/stockist';
 
 export interface CompanyResult {
   id: string;
@@ -25,7 +24,7 @@ export interface CompanyResult {
   isExistingCustomer?: boolean;
   parentCustomerName?: string;
   matchedZoneName?: string;
-  emirate?: string;
+  region?: string;
 }
 
 

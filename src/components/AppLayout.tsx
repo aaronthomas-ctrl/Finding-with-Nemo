@@ -10,7 +10,6 @@ export function AppLayout() {
     { to: "/", icon: Map, label: "Prospecting" },
     { to: "/pipeline", icon: Users, label: "Pipeline" },
     { to: "/projects", icon: Building2, label: "Projects" },
-    { to: "/tier1", icon: ShieldAlert, label: "Tier 1 Watch" },
     { to: "/due-today", icon: Clock, label: "Due Today" },
     { to: "/predicted-demand", icon: Activity, label: "Signals" },
     { to: "/forecast", icon: TrendingUp, label: "Predicted Demand" },

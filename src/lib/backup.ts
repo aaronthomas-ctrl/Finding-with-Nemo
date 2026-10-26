@@ -179,9 +179,5 @@ export async function clearAllData() {
   await db.enquiries.clear();
   await db.interactions.clear();
   await db.campaigns.clear();
-  await db.tier1Employees.clear();
-  await db.tier1Opportunities.clear();
-  await db.tier1StageTransitions.clear();
-  await db.tier1Projects.clear();
   // Don't clear settings
 }

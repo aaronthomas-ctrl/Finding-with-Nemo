@@ -874,3 +874,12 @@ insert into public.injection_patterns (pattern, description) values
  ('(decode|base64|rot13).{0,40}(follow|execute|run)', 'encoded payload'),
  ('(send|email|post|upload).{0,40}(client list|contacts|api key|password)', 'data exfiltration ask'),
  ('remember (that|this)|save (this|that) (to|in) memory', 'memory poisoning');
+-- 22. Flexible per-row extras (the UI keeps a few free-form fields; typed columns stay the source of truth)
+do $$
+declare t text;
+begin
+  foreach t in array array['leads','enquiries','interactions','campaigns','campaign_targets','brands','products','push_logs','search_zones','routes']
+  loop
+    execute format('alter table public.%I add column if not exists metadata jsonb not null default ''{}''', t);
+  end loop;
+end $$;

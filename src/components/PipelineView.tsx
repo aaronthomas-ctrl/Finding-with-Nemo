@@ -6,7 +6,6 @@ import { ClientProfileView } from './ClientProfileView';
 import { ReportModal } from './ReportModal';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
-import { extractEmirate } from '../lib/geo';
 
 export function PipelineView() {
   const [search, setSearch] = useState('');
@@ -149,10 +148,7 @@ export function PipelineView() {
   const groupedClients = useMemo(() => {
     const groups: Record<string, any[]> = {};
     filteredClients.forEach(c => {
-      let region = c.tier1?.emirate;
-      if (!region || region === 'Other') {
-        region = extractEmirate(c.address, c.lat, c.lng);
-      }
+      const region = c.region || c.tier1?.region || 'Unassigned';
       
       if (!groups[region]) groups[region] = [];
       groups[region].push(c);
@@ -649,7 +645,7 @@ export function PipelineView() {
                                           ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-semibold'
                                           : tag.startsWith('Zone:')
                                           ? 'bg-purple-500/15 text-purple-300 border border-purple-500/30'
-                                          : tag.startsWith('Emirate:')
+                                          : tag.startsWith('Region:')
                                           ? 'bg-blue-500/15 text-blue-300 border border-blue-500/30'
                                           : 'bg-blue-900/30 text-blue-300 border border-blue-700/40'
                                       }`}
@@ -953,7 +949,7 @@ export function PipelineView() {
                   required
                   value={phoneObjective}
                   onChange={e => setPhoneObjective(e.target.value)}
-                  placeholder="e.g. Asking about their upcoming pipeline and pitching ESAB consumables..."
+                  placeholder="e.g. Asking about their upcoming pipeline and pitching our new offer..."
                   rows={3}
                   className="w-full bg-[#0d0f12] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-blue-500 resize-none"
                 />

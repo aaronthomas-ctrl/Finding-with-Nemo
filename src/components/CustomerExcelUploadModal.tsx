@@ -1,3 +1,4 @@
+import { useCategories } from '../lib/profile';
 import { apiFetch } from '../lib/api';
 import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
@@ -8,7 +9,7 @@ import {
 } from 'lucide-react';
 import { CompanyResult, PolygonZone } from '../types';
 import { db, Client } from '../db';
-import { pointInPolygon, extractEmirate } from '../lib/geo';
+import { pointInPolygon } from '../lib/geo';
 import { v4 as uuidv4 } from 'uuid';
 import { useNavigate } from 'react-router-dom';
 
@@ -42,7 +43,7 @@ interface ProcessedCustomerLog {
     address: string;
     lat: number | null;
     lng: number | null;
-    emirate: string;
+    region: string;
     matchedZone?: string;
     googleMapsUri?: string;
     phone?: string;
@@ -50,95 +51,11 @@ interface ProcessedCustomerLog {
   message?: string;
 }
 
-const ALLOWED_DB_CATEGORIES = [
-  "EPC Contractor",
-  "Steel Fabricator",
-  "Oilfield & Petrochemical Services",
-  "Electromechanical/MEP",
-  "Marine/Shipbuilding",
-  "Welding Trade/Distributor",
-  "Trader"
-];
-
-function resolveCategory(tag1?: string, tag2?: string): string {
-  const checkTag = (t?: string): string | null => {
-    if (!t) return null;
-    const clean = t.trim().toLowerCase();
-    for (const cat of ALLOWED_DB_CATEGORIES) {
-      if (cat.toLowerCase() === clean) return cat;
-    }
-    // Partial matches
-    if (clean.includes("steel") || clean.includes("fabricat") || clean.includes("metal")) return "Steel Fabricator";
-    if (clean.includes("epc") || clean.includes("contractor") || clean.includes("civil") || clean.includes("construction")) return "EPC Contractor";
-    if (clean.includes("oil") || clean.includes("petro") || clean.includes("gas") || clean.includes("drilling")) return "Oilfield & Petrochemical Services";
-    if (clean.includes("mep") || clean.includes("electro") || clean.includes("mechanical") || clean.includes("plumbing") || clean.includes("hvac")) return "Electromechanical/MEP";
-    if (clean.includes("marine") || clean.includes("ship") || clean.includes("boat") || clean.includes("vessel")) return "Marine/Shipbuilding";
-    if (clean.includes("weld") || clean.includes("distributor") || clean.includes("consumable")) return "Welding Trade/Distributor";
-    if (clean.includes("trade") || clean.includes("trading") || clean.includes("supply") || clean.includes("supplies")) return "Trader";
-    return null;
-  };
-
-  return checkTag(tag1) || checkTag(tag2) || "Other";
+function resolveCategory(tag1: string | undefined, tag2: string | undefined, categories: string[]): string {
+  const match = (t?: string) => t ? categories.find((c) => c.toLowerCase() === t.trim().toLowerCase()) : undefined;
+  return match(tag1) || match(tag2) || 'Other';
 }
 
-const SAMPLE_CUSTOMERS_RICH: CustomerUploadItem[] = [
-  {
-    companyName: "Al Shirawi Enterprises",
-    tag1: "Steel Fabricator",
-    tag2: "VIP Account",
-    phone1: "+971 4 340 0000",
-    phone2: "+971 50 123 4567"
-  },
-  {
-    companyName: "Danway Electrical",
-    tag1: "Electromechanical/MEP",
-    tag2: "Key Account",
-    phone1: "+971 4 347 1234",
-    phone2: "+971 55 987 6543"
-  },
-  {
-    companyName: "Fabrico metal and iron works llc",
-    tag1: "Steel Fabricator",
-    tag2: "Industrial Area 13",
-    phone1: "+971 6 534 5678",
-    phone2: ""
-  },
-  {
-    companyName: "Dulsco LLC",
-    tag1: "EPC Contractor",
-    tag2: "Logistics",
-    phone1: "+971 4 308 0000",
-    phone2: "+971 52 111 2233"
-  },
-  {
-    companyName: "Mammut Building Systems",
-    tag1: "Steel Fabricator",
-    tag2: "Hamriyah FZE",
-    phone1: "+971 6 526 0000",
-    phone2: ""
-  },
-  {
-    companyName: "Cloisall Co",
-    tag1: "Other",
-    tag2: "Interior & Building",
-    phone1: "+971 4 282 2220",
-    phone2: ""
-  },
-  {
-    companyName: "Dutco Balfour Beatty",
-    tag1: "EPC Contractor",
-    tag2: "Infrastructure",
-    phone1: "+971 4 880 1010",
-    phone2: "+971 50 999 8888"
-  },
-  {
-    companyName: "Al Futtaim Engineering",
-    tag1: "Electromechanical/MEP",
-    tag2: "Corporate Account",
-    phone1: "+971 4 213 5555",
-    phone2: ""
-  }
-];
 
 export function CustomerExcelUploadModal({
   isOpen,
@@ -147,6 +64,7 @@ export function CustomerExcelUploadModal({
   onSitesDiscovered,
   onRefreshZones
 }: CustomerExcelUploadModalProps) {
+  const orgCategories = useCategories();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -178,7 +96,7 @@ export function CustomerExcelUploadModal({
     processedCustomers: 0,
     totalSitesFound: 0,
     sitesInZones: 0,
-    emiratesCount: {} as Record<string, number>
+    regionsCount: {} as Record<string, number>
   });
 
   const [isComplete, setIsComplete] = useState(false);
@@ -187,6 +105,7 @@ export function CustomerExcelUploadModal({
 
   // Handle file upload
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const orgCategories = useCategories();
     const file = e.target.files?.[0];
     if (!file) return;
     parseFile(file);
@@ -323,58 +242,11 @@ export function CustomerExcelUploadModal({
     }
   };
 
-  // Load sample UAE company list for quick testing
-  const handleLoadSampleData = () => {
-    setFileName("Sample_UAE_Customers_With_Tags.xlsx");
-    setColumns(["Client Name", "Tag 1", "Tag 2", "Phone 1 (Optional)", "Phone 2 (Optional)"]);
-    setColName("Client Name");
-    setColTag1("Tag 1");
-    setColTag2("Tag 2");
-    setColPhone1("Phone 1 (Optional)");
-    setColPhone2("Phone 2 (Optional)");
-    setCustomerItems(SAMPLE_CUSTOMERS_RICH);
-    setStats(prev => ({ ...prev, totalCustomers: SAMPLE_CUSTOMERS_RICH.length }));
-    setParseError(null);
-  };
-
   // Download Sample Excel Template
   const handleDownloadTemplate = () => {
     const templateData = [
-      { 
-        "Client Name": "Al Shirawi Enterprises", 
-        "Tag 1": "Steel Fabricator", 
-        "Tag 2": "VIP Account", 
-        "Phone 1 (Optional)": "+971 4 340 0000", 
-        "Phone 2 (Optional)": "+971 50 123 4567" 
-      },
-      { 
-        "Client Name": "Danway Electrical", 
-        "Tag 1": "Electromechanical/MEP", 
-        "Tag 2": "Key Account", 
-        "Phone 1 (Optional)": "+971 4 347 1234", 
-        "Phone 2 (Optional)": "+971 55 987 6543" 
-      },
-      { 
-        "Client Name": "Fabrico metal and iron works llc", 
-        "Tag 1": "Steel Fabricator", 
-        "Tag 2": "Industrial", 
-        "Phone 1 (Optional)": "+971 6 534 5678", 
-        "Phone 2 (Optional)": "" 
-      },
-      { 
-        "Client Name": "Dulsco LLC", 
-        "Tag 1": "EPC Contractor", 
-        "Tag 2": "Logistics", 
-        "Phone 1 (Optional)": "+971 4 308 0000", 
-        "Phone 2 (Optional)": "+971 52 111 2233" 
-      },
-      { 
-        "Client Name": "Mammut Building Systems", 
-        "Tag 1": "Steel Fabricator", 
-        "Tag 2": "Hamriyah FZE", 
-        "Phone 1 (Optional)": "+971 6 526 0000", 
-        "Phone 2 (Optional)": "" 
-      }
+      { 'Client Name': 'Example Cafe One', 'Tag 1': 'Cafe', 'Tag 2': 'Key account', 'Phone 1 (Optional)': '', 'Phone 2 (Optional)': '' },
+      { 'Client Name': 'Example Bakery Two', 'Tag 1': 'Bakery', 'Tag 2': '', 'Phone 1 (Optional)': '', 'Phone 2 (Optional)': '' },
     ];
 
     const ws = XLSX.utils.json_to_sheet(templateData);
@@ -409,7 +281,7 @@ export function CustomerExcelUploadModal({
     let processedCount = 0;
     let totalSites = 0;
     let inZonesCount = 0;
-    const emirateTally: Record<string, number> = {};
+    const regionTally: Record<string, number> = {};
     const discoveredCompaniesForMap: CompanyResult[] = [];
 
     for (let i = 0; i < customerItems.length; i++) {
@@ -427,7 +299,7 @@ export function CustomerExcelUploadModal({
       setCurrentIndex(i);
 
       // Determine valid category
-      const resolvedCategory = resolveCategory(customerItem.tag1, customerItem.tag2);
+      const resolvedCategory = resolveCategory(customerItem.tag1, customerItem.tag2, orgCategories);
 
       // Update log to searching
       setLogs(prev => prev.map((l, idx) => idx === i ? { ...l, status: 'searching' } : l));
@@ -476,7 +348,7 @@ export function CustomerExcelUploadModal({
           const unmappedClient: Client = {
             id: unmappedId,
             name: customerName,
-            address: "United Arab Emirates (Unmapped Site)",
+            address: "Unmapped site",
             lat: null,
             lng: null,
             phone: customerItem.phone1 || customerItem.phone2 || '',
@@ -506,10 +378,10 @@ export function CustomerExcelUploadModal({
             },
             tier1: {
               isWatch: true,
-              emirate: "Other",
-              primarySiteAddress: "United Arab Emirates",
+              region: "Other",
+              primarySiteAddress: "",
               justification: `Existing customer uploaded from list.`,
-              allocationStatus: "Open",
+              territoryStatus: "Open",
               allocatedTo: "",
               allocatedProductLines: []
             }
@@ -529,10 +401,10 @@ export function CustomerExcelUploadModal({
             sites: [{
               id: unmappedId,
               name: customerName,
-              address: 'United Arab Emirates',
+              address: '',
               lat: null,
               lng: null,
-              emirate: 'Other',
+              region: 'Other',
               phone: customerItem.phone1 || customerItem.phone2
             }]
           } : l));
@@ -544,7 +416,7 @@ export function CustomerExcelUploadModal({
             const lat = p.location?.latitude;
             const lng = p.location?.longitude;
             const placeAddress = p.address || "";
-            const placeEmirate = p.emirate || extractEmirate(placeAddress, lat, lng);
+            const placeRegion = p.region || '';
 
             // Check against saved search areas (zones)
             let matchedZoneName: string | undefined;
@@ -558,8 +430,8 @@ export function CustomerExcelUploadModal({
               }
             }
 
-            // Tally emirates
-            emirateTally[placeEmirate] = (emirateTally[placeEmirate] || 0) + 1;
+            // Tally regions
+            regionTally[placeRegion] = (regionTally[placeRegion] || 0) + 1;
             totalSites++;
 
             sitesLog.push({
@@ -568,17 +440,17 @@ export function CustomerExcelUploadModal({
               address: placeAddress,
               lat,
               lng,
-              emirate: placeEmirate,
+              region: placeRegion,
               matchedZone: matchedZoneName,
               googleMapsUri: p.googleMapsUri,
               phone: customerItem.phone1 || p.phone || customerItem.phone2
             });
 
-            // Build tags combining uploaded tags, emirate, and zone
+            // Build tags combining uploaded tags, region, and zone
             const combinedTags = Array.from(new Set([
               ...(customerItem.tag1 ? [customerItem.tag1] : []),
               ...(customerItem.tag2 ? [customerItem.tag2] : []),
-              `Emirate: ${placeEmirate}`,
+              `Region: ${placeRegion}`,
               ...(matchedZoneName ? [`Zone: ${matchedZoneName}`] : [])
             ]));
 
@@ -625,7 +497,7 @@ export function CustomerExcelUploadModal({
               category: resolvedCategory,
               tier: 1,
               status: "New",
-              whatTheyDo: `Site in ${placeEmirate}. Tags: ${[customerItem.tag1, customerItem.tag2].filter(Boolean).join(', ') || 'None'}. Verified via Google Places.`,
+              whatTheyDo: `Site in ${placeRegion}. Tags: ${[customerItem.tag1, customerItem.tag2].filter(Boolean).join(', ') || 'None'}. Verified via Google Places.`,
               googleMapsLink: p.googleMapsUri || '',
               tags: combinedTags,
               contacts: contactsList,
@@ -647,10 +519,10 @@ export function CustomerExcelUploadModal({
               },
               tier1: {
                 isWatch: true,
-                emirate: placeEmirate,
+                region: placeRegion,
                 primarySiteAddress: placeAddress,
-                justification: `Existing customer uploaded from list. Location: ${placeEmirate}${matchedZoneName ? ` (${matchedZoneName} Zone)` : ''}.`,
-                allocationStatus: "Open",
+                justification: `Existing customer uploaded from list. Location: ${placeRegion}${matchedZoneName ? ` (${matchedZoneName} Zone)` : ''}.`,
+                territoryStatus: "Open",
                 allocatedTo: "",
                 allocatedProductLines: []
               }
@@ -681,7 +553,7 @@ export function CustomerExcelUploadModal({
                 isExistingCustomer: true,
                 parentCustomerName: customerName,
                 matchedZoneName,
-                emirate: placeEmirate,
+                region: placeRegion,
                 tags: clientRecord.tags
               };
               discoveredCompaniesForMap.push(companyForMap);
@@ -717,7 +589,7 @@ export function CustomerExcelUploadModal({
         processedCustomers: processedCount,
         totalSitesFound: totalSites,
         sitesInZones: inZonesCount,
-        emiratesCount: { ...emirateTally }
+        regionsCount: { ...regionTally }
       });
 
       // Polite delay between Google Places queries
@@ -811,12 +683,6 @@ export function CustomerExcelUploadModal({
               {/* Sample template & test action buttons */}
               <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl bg-[#161a22] border border-slate-800">
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleLoadSampleData}
-                    className="px-3 py-1.5 text-xs font-semibold text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-lg transition-colors flex items-center gap-1.5"
-                  >
-                    <Building2 className="w-3.5 h-3.5" /> Load Sample UAE Customer List
-                  </button>
                   <button
                     onClick={handleDownloadTemplate}
                     className="px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition-colors flex items-center gap-1.5"
@@ -996,7 +862,7 @@ export function CustomerExcelUploadModal({
                   <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg text-xs text-blue-300 flex items-start gap-2">
                     <Layers className="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-400" />
                     <div>
-                      <span className="font-semibold">Automatic Search Zone & Pipeline Inclusion:</span> If a discovered site falls inside any of your {savedZones.length} saved search areas, it will be automatically tagged and linked to that zone. All sites will be saved with your custom tags and phone numbers into the Pipeline under their respective Emirates.
+                      <span className="font-semibold">Automatic Search Zone & Pipeline Inclusion:</span> If a discovered site falls inside any of your {savedZones.length} saved search areas, it will be automatically tagged and linked to that zone. All sites will be saved with your custom tags and phone numbers into the Pipeline under their region.
                     </div>
                   </div>
                 </div>
@@ -1069,10 +935,10 @@ export function CustomerExcelUploadModal({
                     <span className="text-lg font-bold text-blue-400">{stats.sitesInZones}</span>
                   </div>
                   <div className="p-3 bg-[#0f1217] rounded-lg border border-slate-800">
-                    <span className="text-[11px] text-slate-400 uppercase tracking-wider block">Emirates</span>
+                    <span className="text-[11px] text-slate-400 uppercase tracking-wider block">Regions</span>
                     <span className="text-xs font-semibold text-purple-300 truncate block mt-1">
-                      {Object.keys(stats.emiratesCount).length > 0 
-                        ? Object.entries(stats.emiratesCount).map(([e, c]) => `${e}: ${c}`).join(', ') 
+                      {Object.keys(stats.regionsCount).length > 0 
+                        ? Object.entries(stats.regionsCount).map(([e, c]) => `${e}: ${c}`).join(', ') 
                         : "Detecting..."}
                     </span>
                   </div>
@@ -1150,7 +1016,7 @@ export function CustomerExcelUploadModal({
                               </div>
                               <div className="flex items-center gap-1.5 flex-shrink-0">
                                 <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-300">
-                                  {site.emirate}
+                                  {site.region}
                                 </span>
                                 {site.matchedZone && (
                                   <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
@@ -1212,7 +1078,7 @@ export function CustomerExcelUploadModal({
                     setIsComplete(false);
                     setCustomerItems([]);
                     setFileName('');
-                    setStats({ totalCustomers: 0, processedCustomers: 0, totalSitesFound: 0, sitesInZones: 0, emiratesCount: {} });
+                    setStats({ totalCustomers: 0, processedCustomers: 0, totalSitesFound: 0, sitesInZones: 0, regionsCount: {} });
                   }}
                   className="px-3 py-2 text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
                 >

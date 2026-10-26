@@ -219,19 +219,19 @@ export function ReportModal({ onClose }: { onClose: () => void }) {
         }
       }
 
-      // Unallocated Page by Emirates (PDF)
+      // Unallocated page by region (PDF)
       setProgress('Generating unallocated clients...');
       console.log("[Report] Generating unallocated clients");
       
       const unallocatedPdf = validClients.filter(c => !allocatedClients.has(c.id));
-      const emiratesPdf = ['Abu Dhabi', 'Dubai', 'Sharjah', 'Ajman', 'Umm Al Quwain', 'Ras Al Khaimah', 'Fujairah'];
+      const regionsPdf = Array.from(new Set(unallocatedPdf.map(c => c.region || '').filter(Boolean))) as string[];
       const groupedPdf: { [key: string]: typeof validClients } = { 'Other Regions': [] };
-      emiratesPdf.forEach(e => groupedPdf[e] = []);
+      regionsPdf.forEach(e => groupedPdf[e] = []);
       
       unallocatedPdf.forEach(c => {
-        const addressUpper = (c.address || '').toUpperCase();
+        const addressUpper = ((c.region || '') + ' ' + (c.address || '')).toUpperCase();
         let matched = false;
-        for (const e of emiratesPdf) {
+        for (const e of regionsPdf) {
           if (addressUpper.includes(e.toUpperCase())) {
             groupedPdf[e].push(c);
             matched = true;
@@ -244,7 +244,7 @@ export function ReportModal({ onClose }: { onClose: () => void }) {
       });
       
       let isFirstUnallocatedPage = true;
-      for (const groupName of [...emiratesPdf, 'Other Regions']) {
+      for (const groupName of [...regionsPdf, 'Other Regions']) {
         const groupClients = groupedPdf[groupName];
         if (groupClients.length > 0) {
           if (filteredZones.length > 0 || !isFirstUnallocatedPage) doc.addPage();
@@ -407,14 +407,14 @@ export function ReportModal({ onClose }: { onClose: () => void }) {
       }
       
       const unallocated = validClients.filter(c => !allocatedClients.has(c.id));
-      const emirates = ['Abu Dhabi', 'Dubai', 'Sharjah', 'Ajman', 'Umm Al Quwain', 'Ras Al Khaimah', 'Fujairah'];
+      const regions = Array.from(new Set(unallocated.map(c => c.region || '').filter(Boolean))) as string[];
       const groupedUnallocated: { [key: string]: typeof validClients } = { 'Other Regions': [] };
-      emirates.forEach(e => groupedUnallocated[e] = []);
+      regions.forEach(e => groupedUnallocated[e] = []);
       
       unallocated.forEach(c => {
-        const addressUpper = (c.address || '').toUpperCase();
+        const addressUpper = ((c.region || '') + ' ' + (c.address || '')).toUpperCase();
         let matched = false;
-        for (const e of emirates) {
+        for (const e of regions) {
           if (addressUpper.includes(e.toUpperCase())) {
             groupedUnallocated[e].push(c);
             matched = true;
@@ -426,7 +426,7 @@ export function ReportModal({ onClose }: { onClose: () => void }) {
         }
       });
       
-      for (const groupName of [...emirates, 'Other Regions']) {
+      for (const groupName of [...regions, 'Other Regions']) {
         const groupClients = groupedUnallocated[groupName];
         if (groupClients.length > 0) {
           const headerRow = masterSheet.getRow(currentRow);

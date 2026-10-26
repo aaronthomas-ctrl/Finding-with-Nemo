@@ -261,7 +261,7 @@ export async function getOptimizedRoute(
     const from = orderedStops[i];
     const to = orderedStops[i + 1];
     const dist = calculateDistanceKm(from.lat, from.lng, to.lat, to.lng);
-    // Estimated UAE driving duration: average city/industrial speed ~45 km/h + 3 min buffer
+    // Estimated driving duration: average city/industrial speed ~45 km/h + 3 min buffer
     const duration = Math.max(3, Math.round((dist / 45) * 60) + 2);
     legs.push({
       fromStopId: from.id,

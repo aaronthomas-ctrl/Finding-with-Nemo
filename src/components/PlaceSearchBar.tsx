@@ -1,7 +1,8 @@
 import { apiFetch } from '../lib/api';
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, MapPin, X, Loader2, Navigation, Layers, ChevronDown, Building2, Sparkles } from 'lucide-react';
-import { UAE_INDUSTRIAL_REGIONS, PresetRegion } from '../lib/geo';
+import { PresetRegion } from '../lib/geo';
+import { usePresetRegions } from '../lib/profile';
 
 export interface PlaceSearchResult {
   id?: string;
@@ -35,6 +36,7 @@ export function PlaceSearchBar({
   onSearchBusinessesInRegion,
   isSearchingBusinesses = false,
 }: PlaceSearchBarProps) {
+  const presetRegions = usePresetRegions();
   const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<PlaceSearchResult[]>([]);
@@ -100,7 +102,7 @@ export function PlaceSearchBar({
     onSelectPlace({
       id: preset.name.toLowerCase().replace(/\s+/g, '-'),
       name: preset.name,
-      formattedAddress: `${preset.name}, ${preset.emirate}, UAE`,
+      formattedAddress: preset.name,
       location: { lat: preset.lat, lng: preset.lng }
     });
     setQuery('');
@@ -120,13 +122,12 @@ export function PlaceSearchBar({
   };
 
   const filteredPresets = query.trim()
-    ? UAE_INDUSTRIAL_REGIONS.filter(
+    ? presetRegions.filter(
         p =>
           p.name.toLowerCase().includes(query.toLowerCase()) ||
-          p.emirate.toLowerCase().includes(query.toLowerCase()) ||
           p.description.toLowerCase().includes(query.toLowerCase())
       )
-    : UAE_INDUSTRIAL_REGIONS;
+    : presetRegions;
 
   return (
     <div ref={containerRef} className="relative z-30 w-full max-w-md">
@@ -233,7 +234,7 @@ export function PlaceSearchBar({
                 setShowPresetsOnly(false);
               }}
               onFocus={() => setIsOpen(true)}
-              placeholder="Search a place or region (e.g. Mussafah, JAFZA, Hamriyah, Al Quoz)..."
+              placeholder="Search a place, district or city..."
               className="w-full bg-transparent text-sm text-slate-100 placeholder-slate-400 focus:outline-none"
             />
             {isLoading && <Loader2 className="w-4 h-4 text-slate-400 animate-spin shrink-0" />}
@@ -251,7 +252,7 @@ export function PlaceSearchBar({
                 setShowPresetsOnly(!isOpen);
               }}
               className="px-2 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700/80 rounded-lg text-slate-300 hover:text-white text-xs font-medium flex items-center gap-1 shrink-0 transition-colors"
-              title="Show popular UAE industrial hubs"
+              title="Show your search areas"
             >
               <Navigation className="w-3 h-3 text-cyan-400" />
               <span className="hidden sm:inline">Hubs</span>
@@ -295,12 +296,12 @@ export function PlaceSearchBar({
             </div>
           )}
 
-          {/* Quick Select: Top UAE Industrial Regions */}
+          {/* Quick select: your search areas */}
           <div className="p-2">
             <div className="text-[10px] uppercase font-bold text-slate-400 px-2 py-1 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
                 <Building2 className="w-3 h-3 text-blue-400" />
-                <span>Key UAE Industrial Hubs</span>
+                <span>Your search areas</span>
               </span>
               <span className="text-[10px] text-slate-500 font-normal">Click to focus & reveal saved clients</span>
             </div>
@@ -317,7 +318,7 @@ export function PlaceSearchBar({
                         {preset.name}
                       </span>
                       <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700 shrink-0">
-                        {preset.emirate}
+                        {preset.description}
                       </span>
                     </div>
                     <div className="text-[11px] text-slate-400 truncate">{preset.description}</div>

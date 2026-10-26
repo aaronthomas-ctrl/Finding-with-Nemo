@@ -1,3 +1,4 @@
+import { useCategories } from '../lib/profile';
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { db, Client } from '../db';
@@ -8,6 +9,7 @@ interface AddClientModalProps {
 }
 
 export function AddClientModal({ onClose }: AddClientModalProps) {
+  const categoryOptions = useCategories();
   const [formData, setFormData] = useState({
     name: '',
     category: 'Other',
@@ -41,10 +43,10 @@ export function AddClientModal({ onClose }: AddClientModalProps) {
       updatedAt: new Date(),
       tier1: {
         isWatch: false,
-        emirate: "",
+        region: "",
         primarySiteAddress: "",
         justification: "",
-        allocationStatus: "Open",
+        territoryStatus: "Open",
         allocatedTo: "",
         allocatedProductLines: []
       }
@@ -90,14 +92,7 @@ export function AddClientModal({ onClose }: AddClientModalProps) {
                   onChange={e => setFormData({...formData, category: e.target.value})}
                   className="w-full px-3 py-2 bg-black/30 border border-slate-700 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-blue-500"
                 >
-                  <option value="EPC Contractor">EPC Contractor</option>
-                  <option value="Steel Fabricator">Steel Fabricator</option>
-                  <option value="Oilfield & Petrochemical Services">Oilfield & Petrochemical Services</option>
-                  <option value="Electromechanical/MEP">Electromechanical/MEP</option>
-                  <option value="Marine/Shipbuilding">Marine/Shipbuilding</option>
-                  <option value="Welding Trade/Distributor">Welding Trade/Distributor</option>
-                  <option value="Trader">Trader</option>
-                  <option value="Other">Other</option>
+                  {categoryOptions.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               

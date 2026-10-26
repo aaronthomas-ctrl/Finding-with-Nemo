@@ -17,8 +17,6 @@ import { DueTodayView } from './components/DueTodayView';
 import { ForecastView } from './components/ForecastView';
 
 import { SettingsView } from './components/SettingsView';
-import { Tier1WatchView } from './components/Tier1WatchView';
-import { Tier1ProfileView } from './components/Tier1ProfileView';
 import { CampaignsView } from './components/CampaignsView';
 import { PredictedDemandView } from './components/PredictedDemandView';
 import { ProjectsView } from './components/ProjectsView';
@@ -46,8 +44,6 @@ export default function App() {
           <Route path="/dashboard" element={<DashboardView />} />
           <Route path="/pipeline" element={<PipelineView />} />
           <Route path="/pipeline/:id" element={<ClientProfileView />} />
-          <Route path="/tier1" element={<Tier1WatchView />} />
-          <Route path="/tier1/:id" element={<Tier1ProfileView />} />
           <Route path="/due-today" element={<DueTodayView />} />
           <Route path="/forecast" element={<ForecastView />} />
           <Route path="/campaigns" element={<CampaignsView />} />
