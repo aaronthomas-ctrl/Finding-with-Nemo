@@ -1,0 +1,12 @@
+import fs from 'node:fs'; import pg from 'pg';
+const c = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { ca: fs.readFileSync(process.env.PGSSLROOTCERT, 'utf8') } });
+await c.connect();
+const q = async (label, sql) => { const r = await c.query(sql); console.log(`\n# ${label}`); console.table(r.rows); };
+await q('profiles', "select id, onboarding_step, is_business, default_org_id from profiles");
+await q('orgs', "select id, name, kind, country from organizations");
+await q('business_profiles', "select org_id, status, left(summary,120) summary, left(looking_for,60) looking_for from business_profiles");
+await q('tags', "select name, status, origin from tag_definitions order by name");
+await q('sources', "select kind, left(coalesce(url,title),60) src, length(content) len from sources");
+await q('evidence', "select verified, left(quote,70) quote from evidence");
+await q('usage', "select * from usage_quota");
+await c.end();

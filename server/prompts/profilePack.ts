@@ -20,5 +20,6 @@ Produce the profile pack as JSON, in the language of the sources:
  "preset_areas": ["cities or districts worth searching, from where they operate"],
  "cadence_days": {"1":7,"2":14,"3":30,"4":60}
 }
-Rules: 8-14 tags that help find and sort prospects (not the user's own offerings). Every tag needs a cite whose quote appears word for word in the numbered source; if you cannot quote one, give the tag a cite of null. Do not invent facts about the business. ${sourceCount} sources are provided.`;
+Rules: The user's own description (source kind user) is the truth about who they are. Web sources may be about a different organisation with a similar name: ignore any source that does not clearly match the user's description, and if few sources fit, produce a smaller, honest pack instead of guessing.
+Tags describe the kind of prospect to look for (the type of business, place or buyer someone would target), never the user's own products. Never invent a tag just to reach a count. 6-14 tags that help find and sort prospects (not the user's own offerings). Every tag needs a cite whose quote appears word for word in the numbered source; if you cannot quote one, give the tag a cite of null. Do not invent facts about the business. ${sourceCount} sources are provided.`;
 }

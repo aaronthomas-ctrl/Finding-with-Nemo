@@ -136,7 +136,7 @@ export function OnboardingPage() {
             <textarea className={`${input} mt-4 h-32`} value={need.text} onChange={(e) => setNeed({ ...need, text: e.target.value })}
               placeholder={isBusiness ? 'We supply ...' : 'I am looking for ...'} />
             {isBusiness && <input className={`${input} mt-3`} placeholder="Website (optional)" value={need.website} onChange={(e) => setNeed({ ...need, website: e.target.value })} />}
-            <button className={`${primary} mt-4`} disabled={busy || (!need.text.trim() && !need.website.trim())} onClick={buildPack}>
+            <button className={`${primary} mt-4`} disabled={busy || (need.text.trim().length < 30 && !need.website.trim())} onClick={buildPack}>
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
               {busy ? 'Researching and drafting, about 30 seconds' : 'Build my profile'}
             </button>

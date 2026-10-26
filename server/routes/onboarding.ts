@@ -37,7 +37,7 @@ onboarding.post('/onboarding/profile-pack', async (req, res) => {
   if (!canManageRole(r.role)) return res.status(403).json({ error: 'Only owners, admins and managers can set the profile' });
   const text = cleanText(String(req.body?.text || '')).slice(0, 6000);
   const website = String(req.body?.website || '').trim();
-  if (!text && !website) return res.status(400).json({ error: 'Describe your business or need, or add a website' });
+  if (text.length < 30 && !website) return res.status(400).json({ error: 'Write at least a sentence about what you do or need, or add your website, so the research has something real to anchor on.' });
 
   try {
     await assertWithinQuota(r.sb, r.orgId, 'tokens');
@@ -55,13 +55,16 @@ onboarding.post('/onboarding/profile-pack', async (req, res) => {
     }
     const who = org.kind === 'business' ? org.name : text.slice(0, 80);
     const jobs: Array<Promise<void>> = [];
-    const addSearch = (q: string, domains?: string[]) => jobs.push(
+    const addSearch = (q: string, domains?: string[], keep: (url: string) => boolean = () => true) => jobs.push(
       tavilySearch(r.sb, r.orgId, q, { maxResults: 3, includeDomains: domains }).then((s) => {
-        for (const x of s.results) sources.push({ kind: 'tavily', url: x.url, title: x.title, content: x.content });
+        for (const x of s.results.filter((y) => keep(y.url))) sources.push({ kind: 'tavily', url: x.url, title: x.title, content: x.content });
       }).catch((e) => { notes.push(`Search failed: ${e.message}`); }));
-    if (org.kind === 'business') {
-      addSearch(`${who} ${website || ''} company products services customers`.trim());
-      addSearch(`${who} company page`, ['linkedin.com', 'instagram.com']); // public pages only, through Tavily
+    if (org.kind === 'business' && (website || text.length >= 30)) {
+      const host = website ? website.replace(/^https?:\/\//, '').replace(/\/.*$/, '') : '';
+      addSearch(`${who} ${host} company products services customers`.trim());
+      // Public company pages only, through Tavily. Personal LinkedIn profiles are skipped.
+      addSearch(`${who} ${host} company`.trim(), ['linkedin.com', 'instagram.com'],
+        (u) => /linkedin\.com\/company\//i.test(u) || /instagram\.com\/[^/]+\/?$/i.test(u));
     }
     await Promise.all(jobs);
 
