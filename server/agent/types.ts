@@ -24,6 +24,8 @@ export type AgentEvent =
   | { type: 'tool'; id: string; name: string; status: 'running' | 'done' | 'error' | 'blocked'; summary?: string }
   | { type: 'proposal'; approval: { id: string; tool: string; summary: string; payload: any; bulk: boolean } }
   | { type: 'ui'; action: UiAction }
+  | { type: 'memories'; items: Array<{ id: string; short: string; kind: string; content: string; verified: boolean; sourceUrl?: string | null }> }
+  | { type: 'replace'; text: string; notVerified: number }
   | { type: 'done'; threadId: string; messageId: string }
   | { type: 'error'; message: string };
 

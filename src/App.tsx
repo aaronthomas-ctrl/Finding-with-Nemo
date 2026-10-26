@@ -4,6 +4,7 @@
  */
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Navigate, Outlet } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 import { AuthProvider, useAuth } from './auth/AuthProvider';
 import { LoginPage } from './pages/LoginPage';
 import { OnboardingPage } from './pages/OnboardingPage';
@@ -20,6 +21,7 @@ import { SettingsView } from './components/SettingsView';
 import { CampaignsView } from './components/CampaignsView';
 import { PredictedDemandView } from './components/PredictedDemandView';
 import { ProjectsView } from './components/ProjectsView';
+const MemoryView = lazy(() => import('./components/MemoryView').then((m) => ({ default: m.MemoryView })));
 
 
 /** Every app route needs a session and finished onboarding. */
@@ -49,6 +51,7 @@ export default function App() {
           <Route path="/campaigns" element={<CampaignsView />} />
           <Route path="/predicted-demand" element={<PredictedDemandView />} />
           <Route path="/projects" element={<ProjectsView />} />
+          <Route path="/memory" element={<Suspense fallback={<div className="p-6 text-sm text-slate-500">Loading memory view...</div>}><MemoryView /></Suspense>} />
           <Route path="/settings" element={<SettingsView />} />
         </Route>
         </Route>

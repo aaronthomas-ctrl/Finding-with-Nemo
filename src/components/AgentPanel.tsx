@@ -4,6 +4,8 @@ import ReactMarkdown from 'react-markdown';
 import { apiFetch } from '../lib/api';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../auth/AuthProvider';
+import { useNavigate } from 'react-router-dom';
+import { announceMemories } from '../lib/memoryBus';
 
 export type UiAction =
   | { type: 'navigate'; to: string }
@@ -16,7 +18,8 @@ export type UiAction =
 
 interface Proposal { id: string; tool: string; summary: string; payload: any; bulk: boolean; state?: 'pending' | 'working' | 'approved' | 'rejected' | 'error'; note?: string; excluded?: number[] }
 interface ToolEvent { id: string; name: string; status: 'running' | 'done' | 'error' | 'blocked'; summary?: string }
-interface Msg { role: 'user' | 'assistant'; text: string; tools?: ToolEvent[]; proposals?: Proposal[] }
+interface MemItem { id: string; short: string; kind: string; content: string; verified: boolean; sourceUrl?: string | null }
+interface Msg { role: 'user' | 'assistant'; text: string; tools?: ToolEvent[]; proposals?: Proposal[]; memories?: MemItem[] }
 
 interface AgentPanelProps {
   bounds?: google.maps.LatLngBounds | null;
@@ -37,6 +40,7 @@ const TOOL_LABEL: Record<string, string> = {
 
 export function AgentPanel({ bounds, customPath, searchedPlace, onUiAction, onRefreshDB, isHidden = false }: AgentPanelProps) {
   const { canWrite } = useAuth();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([WELCOME]);
   const [threadId, setThreadId] = useState<string | null>(() => { try { return sessionStorage.getItem('agent_thread'); } catch { return null; } });
@@ -103,6 +107,8 @@ export function AgentPanel({ bounds, customPath, searchedPlace, onUiAction, onRe
           else if (ev.type === 'tool') patchLast((m) => ({ ...m, tools: [...(m.tools ?? []).filter((t) => t.id !== ev.id), { id: ev.id, name: ev.name, status: ev.status, summary: ev.summary }] }));
           else if (ev.type === 'proposal') patchLast((m) => ({ ...m, proposals: [...(m.proposals ?? []), { ...ev.approval, state: 'pending' }] }));
           else if (ev.type === 'ui') onUiAction?.(ev.action);
+          else if (ev.type === 'memories') { patchLast((m) => ({ ...m, memories: ev.items })); announceMemories(ev.items.map((i: MemItem) => i.id)); }
+          else if (ev.type === 'replace') patchLast((m) => ({ ...m, text: ev.text }));
           else if (ev.type === 'error') patchLast((m) => ({ ...m, text: m.text + `\n\nError: ${ev.message}` }));
           else if (ev.type === 'done') { setThreadId(ev.threadId); try { sessionStorage.setItem('agent_thread', ev.threadId); } catch { /* ignore */ } }
         }
@@ -175,7 +181,20 @@ export function AgentPanel({ bounds, customPath, searchedPlace, onUiAction, onRe
               ))}
               {(m.text || (busy && idx === messages.length - 1 && !(m.proposals?.length))) && (
                 <div className={`px-4 py-3 rounded-2xl text-sm leading-relaxed prose prose-invert prose-p:my-1 prose-ul:my-1 prose-li:my-0 break-words ${m.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-[#1a1d23] text-slate-300 border border-slate-700 rounded-tl-none'}`}>
-                  {m.text ? <ReactMarkdown components={{ a: ({ children, href }) => <span title={href}>{children}</span>, img: () => null }}>{m.text}</ReactMarkdown> : <Loader2 className="w-4 h-4 animate-spin text-blue-500" />}
+                  {m.text ? <ReactMarkdown
+                    components={{
+                      a: ({ children, href }) => {
+                        const short = href?.startsWith('#m-') ? href.slice(3) : null;
+                        if (!short) return <span>{children}</span>;
+                        const mem = m.memories?.find((x) => x.short === short);
+                        return (
+                          <button type="button" title={mem ? `${mem.verified ? 'Verified' : 'Unverified'} ${mem.kind}: ${mem.content}${mem.sourceUrl ? ` (${new URL(mem.sourceUrl).hostname})` : ''}` : 'Memory'}
+                            onClick={() => { if (mem) announceMemories([mem.id]); navigate('/memory'); }}
+                            className={`align-super text-[9px] px-1 mx-0.5 rounded border ${mem?.verified ? 'border-emerald-500/50 text-emerald-300' : 'border-amber-500/50 text-amber-300'}`}>src</button>
+                        );
+                      },
+                      img: () => null,
+                    }}>{m.text.replace(/\[m:([0-9a-f]{8})\]/g, '[src](#m-$1)')}</ReactMarkdown> : <Loader2 className="w-4 h-4 animate-spin text-blue-500" />}
                 </div>
               )}
               {(m.proposals ?? []).map((p) => {

@@ -3,14 +3,14 @@ import { searchPlaces, drawSearchArea, saveCompanies, saveSearchZone } from './t
 import { suggestSearchTags, applySearchTags, autoTagBatch } from './tools/tags';
 import { findNearbySavedClients, getClient, whatsDueToday, updateClient, logInteraction, setFollowUp, addLead } from './tools/clients';
 import { planRoute } from './tools/routing';
-import { researchCompany } from './tools/research';
+import { researchCompany, recallMemories } from './tools/research';
 
 export const TOOLS: ToolDef[] = [
   suggestSearchTags, applySearchTags,
   searchPlaces, drawSearchArea, saveCompanies, saveSearchZone,
   findNearbySavedClients, getClient, whatsDueToday,
   autoTagBatch, updateClient, logInteraction, setFollowUp, addLead,
-  planRoute, researchCompany,
+  planRoute, researchCompany, recallMemories,
 ];
 
 export const byName = new Map(TOOLS.map((t) => [t.name, t]));

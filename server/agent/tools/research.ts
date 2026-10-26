@@ -1,27 +1,59 @@
-import { createHash } from 'node:crypto';
 import { tavilySearch } from '../../tavily';
+import { ingestText, recall } from '../../memory';
+import { canWrite } from '../../auth';
 import { cleanText, screenWithPatterns } from '../../security/untrusted';
 import type { ToolDef } from '../types';
 
 export const researchCompany: ToolDef = {
   name: 'research_company',
   write: false,
-  description: 'Research a company on the public web with Tavily (its site, directories, public LinkedIn and Instagram pages). Each page is saved as a source so claims can be traced.',
+  description: 'Research a company on the public web with Tavily (its site, directories, public LinkedIn and Instagram pages). Facts found are quote-checked against the page and remembered; the result lists which are verified.',
   parameters: {
     type: 'object',
-    properties: { name: { type: 'string' }, question: { type: 'string', description: 'What to find out, e.g. "upcoming projects"' } },
+    properties: {
+      name: { type: 'string' },
+      question: { type: 'string', description: 'What to find out, e.g. "upcoming projects"' },
+      client_id: { type: 'string', description: 'Attach the findings to this saved client' },
+    },
     required: ['name'],
   },
   async run(args, ctx) {
     const query = `${String(args.name).slice(0, 120)} ${String(args.question || 'company overview').slice(0, 160)}`;
     const web = await tavilySearch(ctx.req.sb, ctx.req.orgId, query, { maxResults: 5, answer: false });
-    const rows = web.results.map((r) => ({
-      org_id: ctx.req.orgId, kind: 'tavily', url: r.url, title: r.title.slice(0, 200), content: r.content,
-      content_hash: createHash('sha256').update(r.content).digest('hex'),
-    }));
-    const { data: saved } = rows.length ? await ctx.req.sb.from('sources').insert(rows).select('id,url') : { data: [] as any[] };
-    const items = web.results.map((r, i) => ({ source_id: saved?.[i]?.id, title: r.title, url: r.url, text: cleanText(r.content).slice(0, 600) }));
-    if (items.some((i) => screenWithPatterns(i.text).suspicious)) ctx.state.tainted = true;
-    return { untrusted: true, data: { query, results: items } };
+    const pages = web.results.filter((r) => r.content.length > 60);
+    if (pages.some((p) => screenWithPatterns(p.content).suspicious)) ctx.state.tainted = true;
+
+    const learned: Array<{ claim: string; verified: boolean; source: string; memory_id?: string }> = [];
+    if (canWrite(ctx.req.role)) {
+      // Evidence Gate: Ultra proposes facts with quotes, code checks each quote against the page.
+      const done = await Promise.all(pages.slice(0, 4).map((p) =>
+        ingestText({ sb: ctx.req.sb, orgId: ctx.req.orgId, userId: ctx.req.user.id }, { text: `${p.title}\n${p.content}`, kind: 'web', url: p.url, title: p.title, clientId: args.client_id || null })
+          .then((r) => r.claims.map((c) => ({ claim: c.claim, verified: c.verified, source: p.url, memory_id: c.memoryId?.slice(0, 8) })))
+          .catch(() => [] as any[])));
+      learned.push(...done.flat());
+    }
+    return {
+      untrusted: true,
+      data: {
+        query,
+        pages: pages.map((p) => ({ title: p.title, url: p.url, excerpt: cleanText(p.content).slice(0, 300) })),
+        facts_remembered: learned,
+        note: 'Cite remembered facts as [m:memory_id]. Say which are unverified.',
+      },
+    };
+  },
+};
+
+export const recallMemories: ToolDef = {
+  name: 'recall_memories',
+  write: false,
+  description: 'Search what the organisation already knows (facts, interactions, voice notes, profile) by meaning.',
+  parameters: { type: 'object', properties: { query: { type: 'string' }, count: { type: 'number' } }, required: ['query'] },
+  async run(args, ctx) {
+    const mems = await recall({ sb: ctx.req.sb, orgId: ctx.req.orgId }, String(args.query), Math.min(15, Number(args.count) || 8));
+    return {
+      untrusted: true,
+      data: { count: mems.length, memories: mems.map((m) => ({ id: m.id.slice(0, 8), kind: m.kind, content: m.content, similarity: Math.round(m.similarity * 100) / 100 })) },
+    };
   },
 };

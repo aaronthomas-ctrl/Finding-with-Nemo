@@ -4,6 +4,8 @@ import { chatStream } from '../llm';
 import { loadOrgContext } from '../org';
 import { agentSystemPrompt } from '../prompts/agent';
 import { assertWithinQuota, tokenSink } from '../usage';
+import { recall, memoryBlock } from '../memory';
+import { verifyReply } from './verify';
 import { fence, screenWithPatterns } from '../security/untrusted';
 import { config } from '../config';
 import { byName, toolSpecs } from './registry';
@@ -42,8 +44,37 @@ export async function runAgent(req: AuthedRequest, body: Body, emit: (e: AgentEv
   const sink = tokenSink(sb, orgId);
   const onUsage = async (u: Parameters<typeof sink>[0]) => { tokensIn += u.tokensIn; tokensOut += u.tokensOut; await sink(u); };
 
+  // Memory retrieval: what the org already knows that relates to this message.
+  let recalled: Array<{ id: string; kind: string; content: string; similarity: number; verified?: boolean }> = [];
+  try {
+    recalled = await recall({ sb, orgId }, message, 8);
+    if (recalled.length) {
+      const [{ data: meta }, srcRows] = await Promise.all([
+        sb.from('memories').select('id,verified,source_id').in('id', recalled.map((m) => m.id)),
+        Promise.resolve(null),
+      ]);
+      const byId = new Map((meta ?? []).map((m: any) => [m.id, m]));
+      const srcIds = [...new Set((meta ?? []).map((m: any) => m.source_id).filter(Boolean))];
+      const { data: srcs } = srcIds.length ? await sb.from('sources').select('id,url').in('id', srcIds) : { data: [] as any[] };
+      const urlById = new Map((srcs ?? []).map((s: any) => [s.id, s.url]));
+      recalled = recalled.map((m) => ({ ...m, verified: byId.get(m.id)?.verified ?? false }));
+      emit({
+        type: 'memories',
+        items: recalled.map((m) => ({ id: m.id, short: m.id.slice(0, 8), kind: m.kind, content: m.content, verified: !!m.verified, sourceUrl: urlById.get(byId.get(m.id)?.source_id) ?? null })),
+      });
+      void srcRows;
+    }
+  } catch (e) { console.warn('[agent] recall failed', e); }
+
+  const evidence: string[] = [];
   const messages: ChatCompletionMessageParam[] = [
-    { role: 'system', content: agentSystemPrompt({ orgName: org.name, kind: org.kind, summary: org.summary, lookingFor: org.lookingFor, tags: org.tags.map((t) => t.name), today: new Date().toISOString().slice(0, 10) }) },
+    {
+      role: 'system',
+      content: agentSystemPrompt({ orgName: org.name, kind: org.kind, summary: org.summary, lookingFor: org.lookingFor, tags: org.tags.map((t) => t.name), today: new Date().toISOString().slice(0, 10) })
+        + (recalled.length
+          ? `\n\nWhat this organisation already knows (memories). Use them, and cite the ones you rely on as [m:xxxxxxxx] using the id shown. Memories marked unverified have no confirmed source: say so if you use them.\n${memoryBlock(recalled as any)}`
+          : '\n\nNo stored memories matched this message.'),
+    },
     ...(past ?? []).reverse().map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
     { role: 'user', content: message },
   ];
@@ -121,6 +152,7 @@ export async function runAgent(req: AuthedRequest, body: Body, emit: (e: AgentEv
         if (blocked) emit({ type: 'tool', id: c.id, name: c.name, status: 'blocked' });
         trace.toolCalls.push({ name: c.name, args, blocked });
         await sb.from('agent_tool_calls').insert({ org_id: orgId, run_id: state.runId, tool: c.name, args, result: { preview: content.slice(0, 500) }, is_write: isWrite, approval_id: approvalId, blocked });
+        evidence.push(content);
         messages.push({ role: 'tool', tool_call_id: c.id, content });
       }
       if (step === MAX_STEPS - 1) {
@@ -133,9 +165,20 @@ export async function runAgent(req: AuthedRequest, body: Body, emit: (e: AgentEv
     else { failed = String(e?.message || e); emit({ type: 'error', message: failed }); }
   }
 
+  let cited: string[] = [];
+  if (!failed && finalText.trim()) {
+    const v = await verifyReply(finalText, { memories: recalled, toolResults: evidence }, onUsage);
+    cited = v.cited;
+    if (v.text !== finalText) { finalText = v.text; emit({ type: 'replace', text: v.text, notVerified: v.notVerified }); }
+  }
+
   const saved = await sb.from('chat_messages').insert({
     org_id: orgId, thread_id: threadId, role: 'assistant', content: finalText.trim() || (failed ? `(${failed})` : '(no reply)'), metadata: trace,
   }).select('id').single();
+  const citedIds = recalled.filter((m) => cited.includes(m.id.slice(0, 8))).map((m) => m.id);
+  if (saved.data?.id && citedIds.length) {
+    await sb.from('message_memory_refs').insert(citedIds.map((id) => ({ org_id: orgId, message_id: saved.data!.id, memory_id: id })));
+  }
   await sb.from('agent_runs').update({
     status: failed ? (failed === 'stopped' ? 'stopped' : 'failed') : 'done', tokens_in: tokensIn, tokens_out: tokensOut, ended_at: new Date().toISOString(),
   }).eq('id', state.runId).eq('org_id', orgId);

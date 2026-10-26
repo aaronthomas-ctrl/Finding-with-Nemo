@@ -10,3 +10,6 @@
 - [ ] Contacts are stored as one encrypted blob in `clients.metadata.contacts_enc`; move to the `contacts` table
 - [ ] Removed for now (rebuild if time): Tier 1 watch screens, warehouse stock browser, direct-push ledger. Outreach log and lean campaigns replace them
 - [ ] Phase E: memories, Evidence Gate on facts, 3D view, verifier. Phase F: voice notes. Phase G/H: watchers, notifications, project graph
+- [ ] Try memory end to end while signed in: paste a note in Memory, watch facts verify by quote, chat and see dots light up, hover citations. Built and type-checked; the Evidence Gate and poisoning filter were checked with a stub database
+- [ ] Memory layout runs on demand (UMAP in the server); wrap as a Nebius Job when deploying
+- [ ] `check_claim` (supported / contradicted / not found) is not built yet

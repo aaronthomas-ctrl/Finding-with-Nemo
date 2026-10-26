@@ -1,6 +1,7 @@
 import { haversineKm, type LatLng } from '../../geo';
 import { cleanText } from '../../security/untrusted';
 import { resolvePlace } from './places';
+import { writeMemories } from '../../memory';
 import type { ToolCtx, ToolDef } from '../types';
 
 const clip = (s: unknown, n = 200) => cleanText(String(s ?? '')).slice(0, n);
@@ -144,6 +145,9 @@ export const logInteraction: ToolDef = {
     if (error) throw new Error(error.message);
     const cadence = Number(org.config.cadence_days?.[String(payload.tier || 4)] ?? 30);
     await req.sb.from('clients').update({ last_contacted_at: new Date().toISOString(), next_follow_up: addDays(cadence), retry_flag: false }).eq('id', payload.client_id).eq('org_id', req.orgId);
+    // The user's own words are the source, so this memory is verified.
+    const { data: cl } = await req.sb.from('clients').select('name').eq('id', payload.client_id).maybeSingle();
+    await writeMemories({ sb: req.sb, orgId: req.orgId }, [{ kind: 'interaction', content: `${payload.kind} with ${cl?.name ?? 'client'}: ${payload.summary}`, verified: true, clientId: payload.client_id }]).catch(() => {});
     return { message: `Logged. Next follow-up in ${cadence} days.` };
   },
 };

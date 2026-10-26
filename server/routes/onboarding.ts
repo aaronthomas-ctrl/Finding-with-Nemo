@@ -10,6 +10,7 @@ import { verifyQuote } from '../evidence';
 import { fence, screenWithPatterns, cleanText } from '../security/untrusted';
 import { tavilyExtract, tavilySearch } from '../tavily';
 import { config } from '../config';
+import { writeMemories } from '../memory';
 
 export const onboarding = Router();
 
@@ -163,6 +164,12 @@ onboarding.post('/onboarding/profile-pack/approve', async (req, res) => {
     const products = (p.product_lines || []).map((n: string) => ({ org_id: r.orgId, name: String(n).slice(0, 120) }));
     if (products.length) await r.sb.from('products').insert(products);
 
+    const profileMems = [
+      p.summary && { kind: 'profile' as const, content: String(p.summary), verified: true },
+      ...(p.offerings || []).slice(0, 8).map((x: string) => ({ kind: 'profile' as const, content: `Offering: ${x}`, verified: true })),
+      ...(p.target_customers || []).slice(0, 8).map((x: string) => ({ kind: 'profile' as const, content: `Target customer: ${x}`, verified: true })),
+    ].filter(Boolean) as any[];
+    await writeMemories({ sb: r.sb, orgId: r.orgId }, profileMems).catch((e) => console.warn('[profile memories]', e.message));
     await r.sb.from('profiles').update({ onboarding_step: 4 }).eq('id', r.user.id);
     await r.sb.from('audit_log').insert({ org_id: r.orgId, actor_id: r.user.id, action: 'profile_pack_approved', entity: 'business_profiles', details: { tags: tags.length } });
     res.json({ ok: true });

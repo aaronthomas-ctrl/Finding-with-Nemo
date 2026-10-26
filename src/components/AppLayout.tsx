@@ -1,7 +1,7 @@
 import { Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { LogOut } from 'lucide-react';
-import { LayoutDashboard, Users, Clock, TrendingUp, Megaphone, Settings, Map, ShieldAlert, Activity, Building2 } from 'lucide-react';
+import { LayoutDashboard, Users, Clock, TrendingUp, Megaphone, Settings, Map, Brain, Activity, Building2 } from 'lucide-react';
 
 export function AppLayout() {
   const { activeOrg, isAdmin, signOut } = useAuth();
@@ -10,6 +10,7 @@ export function AppLayout() {
     { to: "/", icon: Map, label: "Prospecting" },
     { to: "/pipeline", icon: Users, label: "Pipeline" },
     { to: "/projects", icon: Building2, label: "Projects" },
+    { to: "/memory", icon: Brain, label: "Memory" },
     { to: "/due-today", icon: Clock, label: "Due Today" },
     { to: "/predicted-demand", icon: Activity, label: "Signals" },
     { to: "/forecast", icon: TrendingUp, label: "Predicted Demand" },
