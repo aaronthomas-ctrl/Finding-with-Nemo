@@ -1,8 +1,9 @@
 import { db } from '../db';
+import { safeCell } from './safeCell';
 
 function escapeCsv(val: any): string {
   if (val === null || val === undefined) return '';
-  const str = String(val);
+  const str = String(safeCell(String(val)));
   if (str.includes(',') || str.includes('"') || str.includes('\n')) {
     return '"' + str.replace(/"/g, '""') + '"';
   }

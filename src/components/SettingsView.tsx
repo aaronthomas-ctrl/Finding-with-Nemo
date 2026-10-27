@@ -5,6 +5,7 @@ import { db, Settings } from '../db';
 import { Settings as SettingsIcon, Save, Download, Upload, Trash2, AlertTriangle, X, MapPin, Wand2, Tag } from 'lucide-react';
 import { exportClientsCsv, exportEnquiriesCsv, exportInteractionsCsv, exportCampaignsCsv, exportFullJson, importFullJson, clearAllData } from '../lib/backup';
 import { renderTemplate } from '../lib/templates';
+import { AdminPanels } from './AdminPanels';
 
 export function SettingsView() {
   const settingsData = useLiveQuery(() => db.settings.get('default'));
@@ -193,13 +194,13 @@ export function SettingsView() {
   const sampleData = {
     company: allClients?.[0]?.name || "Acme Corp",
     contact_name: allClients?.[0]?.contacts?.[0]?.name || "John",
-    product_line: "Structural Steel",
-    offer: "10% off"
+    product_line: "Sample product",
+    offer: "Introductory offer"
   };
 
   return (
     <div className="flex flex-col h-full bg-[#0c0e12] overflow-hidden">
-      <div className="p-6 border-b border-slate-800 shrink-0 flex justify-between items-center bg-[#12151a]">
+      <div className="p-4 sm:p-6 border-b border-slate-800 shrink-0 flex flex-wrap gap-3 justify-between items-center bg-[#12151a]">
         <div>
           <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
             <SettingsIcon className="w-6 h-6 text-slate-400" /> Settings
@@ -217,11 +218,13 @@ export function SettingsView() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-8 custom-scrollbar">
+
+        <AdminPanels />
 
         <section className="bg-[#12151a] border border-slate-800 p-6 rounded-xl">
           <h3 className="text-lg font-semibold text-slate-200 mb-4 border-b border-slate-800 pb-2 flex items-center gap-2">
-            <Tag className="w-5 h-5 text-slate-400" /> Brands We Distribute
+            <Tag className="w-5 h-5 text-slate-400" /> Products and Services
           </h3>
           <p className="text-xs text-slate-400 mb-4">
             Manage the list of brands you distribute. These will be available as tags in the Customer Profile.

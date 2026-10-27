@@ -23,3 +23,7 @@
 - [ ] Phase G: try while signed in. Chat: "check this claim", "find projects in <text or search>", "predict what <client> needs". Projects page: paste text, approve suggested links. Predictions page: run for a client. Logic was checked offline (quotes verified, injected instruction ignored, predictions capped without evidence)
 - [ ] Project extraction links companies to saved clients by name only (exact or contains); unmatched companies are listed but not created as clients
 - [ ] Predictions use enquiry history, project stages and memories; with no enquiries logged they rely on projects and memories only
+- [ ] PWA: check install and offline in real Chrome (the in-app pane could not register service workers, so it is untested). Then check the voice offline queue with the app installed
+- [ ] 390px pass: the signed-in screens were reviewed in code only (fixed widths are all md-gated, tables scroll, More sheet added) and the public pages were checked at 375px. Look at map, pipeline, client profile, settings and the 3D memory view on a phone
+- [ ] Injection suite: re-run `npm run eval:injection` after any prompt or pattern change; numbers are in docs/injection-results.md (Super) and docs/injection-results-nano.md. Both models resisted nearly everything even with defences off, so the suite shows the plan's attacks are covered, not that any one layer is essential
+- [ ] Settings: try Members (invite code as a second user), Usage meter and Audit log while signed in as an owner

@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
 import type { NextFunction, Request, Response } from 'express';
 import { config } from './config';
+import { refreshPatterns } from './security/untrusted';
 
 export type OrgRole = 'owner' | 'admin' | 'manager' | 'sales' | 'viewer';
 
@@ -46,6 +47,7 @@ export async function requireUser(req: Request, res: Response, next: NextFunctio
     if (!m) return res.status(403).json({ error: 'Not a member of this organisation' });
 
     Object.assign(req, { user: u.user, sb, orgId, role: m.role as OrgRole });
+    void refreshPatterns(sb).catch(() => {});
     next();
   } catch (e: any) {
     console.error('[auth]', e);

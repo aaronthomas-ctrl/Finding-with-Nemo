@@ -1,3 +1,4 @@
+import { safeRow } from '../lib/safeCell';
 import React, { useState, useEffect } from 'react';
 import { FileText, Loader2, X, CheckSquare, Square } from 'lucide-react';
 import { db } from '../db';
@@ -386,7 +387,7 @@ export function ReportModal({ onClose }: { onClose: () => void }) {
         
         if (zoneClients.length > 0) {
           zoneClients.forEach(c => {
-            masterSheet.addRow({
+            masterSheet.addRow(safeRow({
               name: c.name || '',
               tier: c.tier || '',
               website: c.website || '',
@@ -395,7 +396,7 @@ export function ReportModal({ onClose }: { onClose: () => void }) {
               status: c.status || '',
               category: c.category || '',
               tags: c.tags?.join(', ') || ''
-            });
+            }));
             currentRow++;
           });
         } else {
@@ -435,7 +436,7 @@ export function ReportModal({ onClose }: { onClose: () => void }) {
           currentRow++;
           
           groupClients.forEach(c => {
-            masterSheet.addRow({
+            masterSheet.addRow(safeRow({
               name: c.name || '',
               tier: c.tier || '',
               website: c.website || '',
@@ -444,7 +445,7 @@ export function ReportModal({ onClose }: { onClose: () => void }) {
               status: c.status || '',
               category: c.category || '',
               tags: c.tags?.join(', ') || ''
-            });
+            }));
           });
           currentRow += 2;
         }

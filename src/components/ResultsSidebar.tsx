@@ -5,6 +5,7 @@ import { checkDuplicate, saveCompanyToPipeline } from '../lib/pipeline';
 import { useNavigate } from 'react-router-dom';
 import { PlaceSearchResult } from './PlaceSearchBar';
 import { usePresetRegions, useSearchSuggestions } from '../lib/profile';
+import { safeCell } from '../lib/safeCell';
 
 
 interface ResultsSidebarProps {
@@ -188,17 +189,10 @@ export function ResultsSidebar({
 
   const handleExportCSV = () => {
     const headers = ['Name', 'Address', 'Phone', 'Website', 'Category', 'Rating', 'Company Background', 'Insights', 'Latitude', 'Longitude'];
+    const q = (v: unknown) => `"${String(safeCell(String(v ?? ''))).replace(/"/g, '""')}"`;
     const rows = filteredCompanies.map(c => [
-      `"${c.name.replace(/"/g, '""')}"`,
-      `"${c.address.replace(/"/g, '""')}"`,
-      `"${c.phone || ''}"`,
-      `"${c.website || ''}"`,
-      `"${c.category || ''}"`,
-      c.rating || '',
-      `"${(c.summary || '').replace(/"/g, '""')}"`,
-      `"${(c.insights || '').replace(/"/g, '""')}"`,
-      c.location.latitude,
-      c.location.longitude
+      q(c.name), q(c.address), q(c.phone), q(c.website), q(c.category), c.rating || '', q(c.summary), q(c.insights),
+      c.location.latitude, c.location.longitude
     ]);
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });

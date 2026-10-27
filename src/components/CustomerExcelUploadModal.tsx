@@ -1,4 +1,5 @@
 import { useCategories } from '../lib/profile';
+import { safeCell } from '../lib/safeCell';
 import { apiFetch } from '../lib/api';
 import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
@@ -129,7 +130,7 @@ export function CustomerExcelUploadModal({
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
       
-      const jsonData = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet, { header: 1 });
+      const jsonData = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet, { header: 1 }).map((row: any) => Array.isArray(row) ? row.map((cell: unknown) => safeCell(cell)) : row);
       
       if (!jsonData || jsonData.length === 0) {
         throw new Error("The selected file contains no readable data.");

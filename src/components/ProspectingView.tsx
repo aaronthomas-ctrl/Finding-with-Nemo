@@ -491,7 +491,7 @@ export function ProspectingView() {
   };
 
   return (
-    <div className="flex w-full h-[calc(100vh-64px)] overflow-hidden relative">
+    <div className="flex w-full h-[calc(100dvh-4rem)] md:h-dvh overflow-hidden relative">
       {/* SIDEBAR: Responsively toggleable on mobile */}
       <div className={`w-full md:w-96 flex-shrink-0 border-r border-slate-800 bg-[#12151a] overflow-y-auto z-10 custom-scrollbar shadow-2xl relative ${
         mobileView === 'sidebar' ? 'block' : 'hidden md:block'

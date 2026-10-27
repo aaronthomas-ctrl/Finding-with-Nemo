@@ -21,15 +21,20 @@ export interface Classification {
   suspicious: boolean;
 }
 
-/** Reads a public website and returns its text, plus title and description. */
-export async function readWebsite(url: string) {
-  const { html, url: finalUrl } = await fetchPublicText(url);
+/** HTML to the text a model may see: hidden elements, comments and invisible characters are removed first. */
+export function htmlToSiteText(html: string) {
   const $ = cheerio.load(html);
   const title = cleanText($('title').text().trim());
   const description = cleanText($('meta[name="description"]').attr('content')?.trim() || '');
   $('script,style,noscript,nav,footer,header,template').remove();
   const text = cleanText(stripHiddenHtml($('body').html() || ''));
-  return { url: finalUrl, title, description, text };
+  return { title, description, text };
+}
+
+/** Reads a public website and returns its text, plus title and description. */
+export async function readWebsite(url: string) {
+  const { html, url: finalUrl } = await fetchPublicText(url);
+  return { url: finalUrl, ...htmlToSiteText(html) };
 }
 
 /** Nano labels a website with the org's own tags. Every tag must be backed by a quote found in the page. */
