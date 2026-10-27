@@ -13,6 +13,8 @@
     "db:apply": "node --env-file=.env scripts/apply-schema.mjs",
     "smoke:llm": "tsx scripts/smoke-llm.ts",
     "eval:injection": "tsx scripts/injection-eval.ts",
+    "seed": "tsx scripts/seed-demo.ts",
+    "eval:agent": "tsx scripts/eval-agent.ts",
     "test:patterns": "tsx scripts/test-patterns.ts"
   },
   "dependencies": {

@@ -7,7 +7,7 @@ import { LogOut } from 'lucide-react';
 import { LayoutDashboard, Users, Clock, TrendingUp, Megaphone, Settings, Map, Brain, Mic, Eye, Activity, Building2, Menu } from 'lucide-react';
 
 export function AppLayout() {
-  const { activeOrg, isAdmin, signOut } = useAuth();
+  const { activeOrg, isAdmin, signOut, memberships, switchOrg } = useAuth();
   useEffect(() => startVoiceSync(), []);
   const [moreOpen, setMoreOpen] = useState(false);
   const allItems = [
@@ -37,6 +37,14 @@ export function AppLayout() {
           </div>
           <h1 className="text-lg font-semibold tracking-tight text-slate-100 truncate">{activeOrg?.org.name ?? 'Finding with Nemo'}</h1>
           <NotificationBell className="ml-auto" />
+        </div>
+        <div className="px-3 pt-3">
+          {memberships.length > 1 && (
+            <select value={activeOrg?.org_id ?? ''} onChange={(e) => switchOrg(e.target.value)} aria-label="Switch organisation"
+              className="w-full px-2 py-1.5 rounded-lg bg-[#0c0e12] border border-slate-700 text-xs text-slate-300">
+              {memberships.map((m) => <option key={m.org_id} value={m.org_id}>{m.org.name}</option>)}
+            </select>
+          )}
         </div>
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
           {navItems.map((item) => (
@@ -86,6 +94,12 @@ export function AppLayout() {
       {moreOpen && (
         <div className="md:hidden fixed inset-0 z-[60] bg-black/60" onClick={() => setMoreOpen(false)}>
           <div className="absolute bottom-0 left-0 right-0 bg-[#12151a] border-t border-slate-700 rounded-t-2xl p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]" onClick={(e) => e.stopPropagation()}>
+            {memberships.length > 1 && (
+            <select value={activeOrg?.org_id ?? ''} onChange={(e) => switchOrg(e.target.value)} aria-label="Switch organisation"
+              className="w-full mb-3 px-3 py-2.5 rounded-xl bg-[#0c0e12] border border-slate-700 text-sm text-slate-300">
+              {memberships.map((m) => <option key={m.org_id} value={m.org_id}>{m.org.name}</option>)}
+            </select>
+          )}
             <div className="grid grid-cols-3 gap-2">
               {navItems.map((item) => (
                 <NavLink key={item.to} to={item.to} onClick={() => setMoreOpen(false)}

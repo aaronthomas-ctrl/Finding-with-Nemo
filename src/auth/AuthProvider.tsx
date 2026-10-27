@@ -27,6 +27,8 @@ interface AuthState {
   canWrite: boolean;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
+  /** Make another organisation the active one (people can belong to several). */
+  switchOrg: (orgId: string) => Promise<void>;
 }
 
 const Ctx = createContext<AuthState | null>(null);
@@ -73,6 +75,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       canWrite: role === 'owner' || role === 'admin' || role === 'manager' || role === 'sales',
       refresh: async () => { await load(session); },
       signOut: async () => { await supabase.auth.signOut(); },
+      switchOrg: async (orgId: string) => {
+        if (!session || !memberships.some((m) => m.org_id === orgId)) return;
+        const { error } = await supabase.from('profiles').update({ default_org_id: orgId }).eq('id', session.user.id);
+        if (error) { console.warn('[auth] could not switch organisation:', error.message); return; }
+        // A clean reload resets every screen to the new organisation's data.
+        window.location.assign('/');
+      },
     };
   }, [session, profile, memberships, loading, load]);
 

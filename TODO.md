@@ -27,3 +27,9 @@
 - [ ] 390px pass: the signed-in screens were reviewed in code only (fixed widths are all md-gated, tables scroll, More sheet added) and the public pages were checked at 375px. Look at map, pipeline, client profile, settings and the 3D memory view on a phone
 - [ ] Injection suite: re-run `npm run eval:injection` after any prompt or pattern change; numbers are in docs/injection-results.md (Super) and docs/injection-results-nano.md. Both models resisted nearly everything even with defences off, so the suite shows the plan's attacks are covered, not that any one layer is essential
 - [ ] Settings: try Members (invite code as a second user), Usage meter and Audit log while signed in as an owner
+- [ ] **Run the agent evaluation** with your account: `EVAL_EMAIL=... EVAL_PASSWORD=... npm run eval:agent` (needs the three seeded orgs on that account). It fills the README table and writes docs/agent-eval.md. Only the stubbed dry run has been exercised
+- [ ] **Build the Docker image** once (`docker build`, see docs/deploy.md), then deploy to a Nebius endpoint. Docker is not installed on the authoring machine, so the image is untested; the runtime dependency set was verified by simulation
+- [ ] Create the judge account in Supabase (Authentication, Add user, auto-confirm), then `npm run seed -- --email <judge> --activate`
+- [ ] Record the demo video (docs/demo-script.md) and check the Devpost length rule (the page returned 403 to automated fetches)
+- [ ] Fill docs/devpost.md brackets: track, hosted URL, judge login, video link; make the repo public
+- [ ] Re-run `npm run db:apply` is NOT needed again: migrations 001 to 006 are already applied and appended to supabase/schema.sql

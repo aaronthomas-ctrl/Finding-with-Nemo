@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
 import path from 'path';
-import { createServer as createViteServer } from 'vite';
 import { requireUser } from './server/auth';
 import { places } from './server/routes/places';
 import { route } from './server/routes/route';
@@ -42,6 +41,8 @@ app.use('/api', requireUser, places, route, enrich, pitch, pii, onboarding, agen
 async function startServer() {
   const port = Number(process.env.PORT || 3000);
   if (process.env.NODE_ENV !== 'production') {
+    // Loaded only in development, so the production image does not need Vite at all.
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({ server: { middlewareMode: true }, appType: 'spa' });
     app.use(vite.middlewares);
   } else {
