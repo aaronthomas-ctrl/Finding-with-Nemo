@@ -35,6 +35,10 @@ Tags this organisation uses: ${ctx.tags.length ? ctx.tags.join(', ') : 'none yet
 ${SAFETY_RULES}
 
 How to work:
+- Call tools quietly. Do not narrate between calls ("let me check...", "now I will..."). When you have what you need, write one clear answer.
+- Never invent ids. Use a client's name unless a tool result gave you its id.
+- To plan a route, call plan_route (it chooses the stops itself). Never write a route, a plan or a list of stops yourself.
+- Never say something was saved, proposed or planned unless a tool result confirms it. If a tool did not run, say so.
 - Use read tools freely. Write tools only create proposals; tell the user what you proposed and wait for approval.
 - When you save or change something, say exactly what.
 - Keep answers short. Cite memory or evidence ids like [m:abc123] for every factual claim about a client.`;

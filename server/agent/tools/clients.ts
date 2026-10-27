@@ -9,9 +9,18 @@ const today = () => new Date().toISOString().slice(0, 10);
 const addDays = (d: number) => new Date(Date.now() + d * 864e5).toISOString().slice(0, 10);
 
 /** Find a client by id or by (partial) name inside the caller's org. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Accepts an id, or a name the model put in the id field by mistake. */
+export function splitRef(ref: { client_id?: string; name?: string }): { id?: string; name?: string } {
+  if (ref.client_id && UUID.test(ref.client_id)) return { id: ref.client_id };
+  return { name: ref.name || ref.client_id };
+}
+
 async function findClient(ctx: Pick<ToolCtx, 'req'>, ref: { client_id?: string; name?: string }) {
+  const r = splitRef(ref);
   let q = ctx.req.sb.from('clients').select('*').eq('org_id', ctx.req.orgId).limit(1);
-  q = ref.client_id ? q.eq('id', ref.client_id) : q.ilike('name', `%${String(ref.name ?? '').replace(/[%_]/g, '')}%`);
+  q = r.id ? q.eq('id', r.id) : q.ilike('name', `%${String(r.name ?? '').replace(/[%_]/g, '')}%`);
   const { data } = await q;
   return data?.[0] ?? null;
 }

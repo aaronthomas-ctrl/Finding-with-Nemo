@@ -1,0 +1,15 @@
+import 'dotenv/config';
+import fs from 'node:fs'; import pg from 'pg';
+import { simClient, closeSim } from './pg-supabase';
+import { searchPlaces } from '../../server/agent/tools/places';
+const a = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { ca: fs.readFileSync(process.env.PGSSLROOTCERT!, 'utf8') } }); await a.connect();
+const uid = (await a.query("select id from auth.users where email='aaronthomashermit@gmail.com'")).rows[0].id; await a.end();
+const sb = simClient(uid);
+const req: any = { sb, orgId: '5eed0000-0000-4000-8000-00000000000a', user: { id: uid }, role: 'owner' };
+const ctx: any = { req, org: { country: 'United Arab Emirates' }, ui: {}, state: { results: new Map(), tainted: false }, emit() {} };
+const t = (label: string, t0: number) => console.log(label, Date.now() - t0, 'ms');
+let t0 = Date.now();
+const r = await searchPlaces.run({ query: 'specialty coffee shops', area: { kind: 'place', name: 'Dubai Marina' } }, ctx);
+t('search_places total', t0);
+console.log(JSON.stringify(r.data).slice(0, 200));
+await closeSim();

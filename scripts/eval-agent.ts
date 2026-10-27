@@ -19,6 +19,8 @@ import { QUESTIONS, ORG_NAME, type Question } from './eval/questions';
 
 const args = process.argv.slice(2);
 const DRY = args.includes('--dry');
+/** --sim EMAIL: act as that existing user through Postgres row level security (no password needed). Testing only. */
+const SIM = args.includes('--sim') ? args[args.indexOf('--sim') + 1] : null;
 const only = args.includes('--only') ? args[args.indexOf('--only') + 1] : null;
 const limit = args.includes('--limit') ? Number(args[args.indexOf('--limit') + 1]) : Infinity;
 
@@ -101,7 +103,20 @@ async function runOne(q: Question, ctx: { sb: any; orgId: string; user: any } | 
 
 async function main() {
   let ctxFor: Record<string, { sb: any; orgId: string; user: any }> = {};
-  if (!DRY) {
+  if (SIM) {
+    const pg = (await import('pg')).default;
+    const { simClient } = await import('./sim/pg-supabase');
+    const admin = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { ca: fs.readFileSync(process.env.PGSSLROOTCERT!, 'utf8') } });
+    await admin.connect();
+    const u = (await admin.query('select id from auth.users where lower(email)=lower($1)', [SIM])).rows[0];
+    if (!u) { console.error('No such account: ' + SIM); process.exit(1); }
+    for (const [k, name] of Object.entries(ORG_NAME)) {
+      const o = (await admin.query('select o.id from public.organizations o join public.memberships m on m.org_id = o.id where o.name = $1 and m.user_id = $2', [name, u.id])).rows[0];
+      if (!o) { console.error(`${SIM} is not a member of "${name}". Run: npm run seed -- --email ${SIM}`); process.exit(1); }
+      ctxFor[k] = { sb: simClient(u.id), orgId: o.id, user: { id: u.id } };
+    }
+    await admin.end();
+  } else if (!DRY) {
     const { EVAL_EMAIL: email, EVAL_PASSWORD: password } = process.env;
     if (!email || !password) { console.error('Set EVAL_EMAIL and EVAL_PASSWORD (an account that belongs to the three seeded orgs), or use --dry.'); process.exit(1); }
     const sb = createClient(process.env.SUPABASE_URL!, process.env.VITE_SUPABASE_ANON_KEY!, { auth: { persistSession: false, autoRefreshToken: true } });
@@ -188,10 +203,10 @@ ${results.map((r) => `| ${r.id} | ${r.org} | ${r.question.replace(/\|/g, '/')} |
 - Small, hand-written question set; one run each, so latency and wording vary between runs.
 `;
   fs.mkdirSync('docs', { recursive: true });
-  const suffix = DRY ? '-dry' : '';
+  const suffix = DRY ? '-dry' : SIM ? '-sim' : '';
   fs.writeFileSync(`docs/agent-eval${suffix}.json`, JSON.stringify({ summary, results }, null, 2));
   fs.writeFileSync(`docs/agent-eval${suffix}.md`, md);
-  if (!DRY && fs.existsSync('README.md')) {
+  if (!DRY && !SIM && fs.existsSync('README.md')) {
     const readme = fs.readFileSync('README.md', 'utf8');
     if (readme.includes('<!-- eval:start -->')) fs.writeFileSync('README.md', readme.replace(/<!-- eval:start -->[\s\S]*?<!-- eval:end -->/, table));
   }

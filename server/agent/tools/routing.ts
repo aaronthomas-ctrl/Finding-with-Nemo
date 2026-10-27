@@ -25,7 +25,8 @@ export const planRoute: ToolDef = {
     const date = /^\d{4}-\d{2}-\d{2}$/.test(args.date || '') ? args.date : today();
 
     let q = ctx.req.sb.from('clients').select('id,name,tier,lat,lng,next_follow_up,retry_flag,address').eq('org_id', ctx.req.orgId).not('lat', 'is', null);
-    q = args.client_ids?.length ? q.in('id', args.client_ids.slice(0, 40)) : q.or(`next_follow_up.lte.${date},retry_flag.eq.true`).limit(60);
+    const ids = (args.client_ids ?? []).filter((i: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(i));
+    q = ids.length ? q.in('id', ids.slice(0, 40)) : q.or(`next_follow_up.lte.${date},retry_flag.eq.true`).limit(60);
     const { data: cands } = await q;
     if (!cands?.length) return { data: { error: 'No clients with a location are due. Try giving client ids or save some clients first.' } };
 

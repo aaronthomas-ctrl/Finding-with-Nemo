@@ -4,6 +4,7 @@ import { predictForClient, savePredictions } from '../../predict';
 import { tavilySearch } from '../../tavily';
 import { cleanText, screenWithPatterns } from '../../security/untrusted';
 import type { ToolDef } from '../types';
+import { splitRef } from './clients';
 
 export const checkClaimTool: ToolDef = {
   name: 'check_claim',
@@ -80,7 +81,8 @@ export const predictNextNeed: ToolDef = {
   parameters: { type: 'object', properties: { client_id: { type: 'string' }, name: { type: 'string' } } },
   async run(args, ctx) {
     let q = ctx.req.sb.from('clients').select('id,name').eq('org_id', ctx.req.orgId).limit(1);
-    q = args.client_id ? q.eq('id', args.client_id) : q.ilike('name', `%${String(args.name ?? '').replace(/[%_]/g, '')}%`);
+    const ref = splitRef(args);
+    q = ref.id ? q.eq('id', ref.id) : q.ilike('name', `%${String(ref.name ?? '').replace(/[%_]/g, '')}%`);
     const c = (await q).data?.[0];
     if (!c) return { data: { error: 'No matching client.' } };
     const preds = await predictForClient(ctx.req, c.id);

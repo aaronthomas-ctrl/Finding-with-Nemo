@@ -81,6 +81,8 @@ export async function runAgent(req: AuthedRequest, body: Body, emit: (e: AgentEv
 
   const trace = { toolCalls: [] as any[], proposals: [] as any[], ui: [] as any[] };
   let finalText = '';
+  let lastStepText = '';
+  let toolSteps = 0;
   let failed: string | null = null;
 
   try {
@@ -98,7 +100,9 @@ export async function runAgent(req: AuthedRequest, body: Body, emit: (e: AgentEv
         }
       }
       finalText += text;
+      lastStepText = text;
       if (calls.size === 0) break;
+      toolSteps++;
 
       const list = [...calls.values()].map((c, i) => ({ ...c, id: c.id || `call_${step}_${i}` }));
       messages.push({ role: 'assistant', content: text || null, tool_calls: list.map((c) => ({ id: c.id, type: 'function', function: { name: c.name, arguments: c.args || '{}' } })) });
@@ -165,6 +169,11 @@ export async function runAgent(req: AuthedRequest, body: Body, emit: (e: AgentEv
     else { failed = String(e?.message || e); emit({ type: 'error', message: failed }); }
   }
 
+  // Narration written between tool calls is dropped: the reply is the last step's answer.
+  if (!failed && toolSteps > 0 && lastStepText.trim() && finalText !== lastStepText) {
+    finalText = lastStepText;
+    emit({ type: 'replace', text: lastStepText, notVerified: 0 });
+  }
   let cited: string[] = [];
   if (!failed && finalText.trim()) {
     const v = await verifyReply(finalText, { memories: recalled, toolResults: evidence }, onUsage);
