@@ -10,7 +10,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 export const planRoute: ToolDef = {
   name: 'plan_route',
   write: true,
-  description: 'Plan a visiting route. Picks the stops from what is due, what is nearby and priority, then Google orders them. Returns a route for the user to approve and open.',
+  description: 'Plan a visiting route. Call this directly for any request to plan a route or a day of visits: it finds the due clients itself, picks the stops from what is due, what is nearby and priority, then Google orders them. Do not look up clients first. Returns a route for the user to approve and open.',
   parameters: {
     type: 'object',
     properties: {
