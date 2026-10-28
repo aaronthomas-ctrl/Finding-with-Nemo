@@ -37,6 +37,17 @@ docker push cr.eu-north1.nebius.cloud/REGISTRY_PATH/nemo:1
 Check the host name against `nebius registry list`; it depends on your region.
 Source: [Container Registry quickstart](https://docs.nebius.com/container-registry/quickstart).
 
+## 2a. No Docker on your machine: let GitHub build the image
+
+Docker Desktop needs virtualization, which many laptops have switched off. You do not need it. The workflow
+`.github/workflows/docker.yml` builds the image on GitHub, starts it to check it answers, and publishes it to
+`ghcr.io/aaronthomas-ctrl/finding-with-nemo:latest` on every push to `main`.
+
+One-time setup on GitHub (repository **Settings**):
+1. **Secrets and variables, Actions, Variables tab**: add `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` and `GOOGLE_MAPS_PLATFORM_KEY` (the browser-restricted Maps key). These are public values; use **Variables**, not Secrets.
+2. Push (or run the workflow by hand from the **Actions** tab). When it is green, open your profile's **Packages**, select `finding-with-nemo`, **Package settings**, and set visibility to **Public** so a Nebius endpoint can pull it without credentials. The image contains no secrets: every secret is passed at run time.
+3. Use `--image ghcr.io/aaronthomas-ctrl/finding-with-nemo:latest` in step 4 and skip the registry steps above.
+
 ## 3. Secrets
 
 Create one MysteryBox secret per value below and reference each with `--env-secret KEY=SECRET`:
