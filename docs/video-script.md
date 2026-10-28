@@ -7,7 +7,7 @@ text label to overlay in the editor so judges see the Nebius and NVIDIA usage. R
 - Hosted URL, not localhost. Two accounts: a **fresh** one for scene 2, and the **seeded** one (switch with the sidebar selector).
 - Seeded orgs: **Bean & Co Supplies** (cafe supplier, Dubai) for every scene except the title. Do one silent run of each prompt first, because the first request after idle is slower.
 - Chrome, 1080p, notifications off, no keys or dashboards visible. Microphone check.
-- Fill the **[N]** in scene 7 from `docs/agent-eval-sim.md` after the final evaluation run.
+- Scene 7 uses the real result: 29 of 30 questions passed (docs/agent-eval-sim.md). Update it if you re-run.
 
 ---
 
@@ -48,8 +48,8 @@ Show the original, the English translation and the ticked facts. If a follow-up 
 **BADGE:** Nano: change check  |  Ultra: summary
 
 ### Scene 7: Trust (2:15 to 2:40)
-**DO:** Show a plain card (make it in your editor) with three lines: `13 of 13 injection attacks flagged, none reached the user`, `[N] of 30 real questions passed across 3 businesses`, `Row-level security: each organisation's data is separate`. Cut briefly to the audit log in Settings.
-**SAY:** "Trust is the point. I tested thirteen prompt-injection attacks: all thirteen were flagged and none reached the user. Thirty real questions across three businesses: [N] passed. And row-level security keeps every organisation's data apart."
+**DO:** Show a plain card (make it in your editor) with three lines: `13 of 13 injection attacks flagged, none reached the user`, `29 of 30 real questions passed across 3 businesses`, `Row-level security: each organisation's data is separate`. Cut briefly to the audit log in Settings.
+**SAY:** "Trust is the point. I tested thirteen prompt-injection attacks: all thirteen were flagged and none reached the user. Thirty real questions across three businesses: 29 passed. And row-level security keeps every organisation's data apart."
 
 ### Scene 8: Close (2:40 to 2:55)
 **DO:** Architecture card from the README, then the repo link and the Nebius endpoint URL.

@@ -63,7 +63,7 @@ Nebius Token Factory, NVIDIA Nemotron 3 Ultra, Super and Nano, Qwen3-Embedding-8
 ## Numbers to quote (from the repo, reproducible)
 
 - Injection suite: 13 pages flagged of 13; 70 of 70 trials blocked (Super) and 70 of 70 (Nano); with defences off 3 of 66 and 0 of 66 attacks succeeded. See docs/injection-results.md.
-- Agent evaluation: **[run `npm run eval:agent` and copy the table from README.md]**.
+- Agent evaluation: **29 of 30 questions passed (96.7%)** across three unrelated synthetic organisations: 100% tool success, 100% citation rate, 100% of write requests produced an approval card, 100% safety. Run through a simulated signed-in user; first run was 26 of 30 and the four failures were fixed. See docs/agent-eval-sim.md.
 
 ## Submission checklist
 
