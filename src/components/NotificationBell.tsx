@@ -15,6 +15,9 @@ export function NotificationBell({ className = '' }: { className?: string }) {
   const [open, setOpen] = useState(false);
   const [toast, setToast] = useState<Note | null>(null);
   const box = useRef<HTMLDivElement>(null);
+  // The layout mounts a bell for the sidebar and one for phones. Realtime channels are shared by name, so each
+  // instance needs its own, or the second one throws and React unmounts the whole app.
+  const instance = useRef(Math.random().toString(36).slice(2, 8));
 
   const load = useCallback(async () => {
     if (!orgId) return;
@@ -25,19 +28,25 @@ export function NotificationBell({ className = '' }: { className?: string }) {
   useEffect(() => {
     if (!orgId || !session) return;
     load();
-    const ch = supabase.channel(`notifications:${orgId}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `org_id=eq.${orgId}` }, (p) => {
-        const n = p.new as Note;
-        setItems((prev) => (prev.some((x) => x.id === n.id) ? prev : [n, ...prev]));
-        setToast(n);
-        setTimeout(() => setToast((t) => (t?.id === n.id ? null : t)), 6000);
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `org_id=eq.${orgId}` }, (p) => {
-        const n = p.new as Note;
-        setItems((prev) => prev.map((x) => (x.id === n.id ? n : x)));
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    let ch: ReturnType<typeof supabase.channel> | null = null;
+    try {
+      ch = supabase.channel(`notifications:${orgId}:${instance.current}:${Date.now()}`)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `org_id=eq.${orgId}` }, (p) => {
+          const n = p.new as Note;
+          setItems((prev) => (prev.some((x) => x.id === n.id) ? prev : [n, ...prev]));
+          setToast(n);
+          setTimeout(() => setToast((t) => (t?.id === n.id ? null : t)), 6000);
+        })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `org_id=eq.${orgId}` }, (p) => {
+          const n = p.new as Note;
+          setItems((prev) => prev.map((x) => (x.id === n.id ? n : x)));
+        })
+        .subscribe();
+    } catch (e) {
+      // Live updates are a nicety: if they cannot start, the bell still works from the list it loaded.
+      console.warn('[notifications] realtime unavailable:', e);
+    }
+    return () => { if (ch) supabase.removeChannel(ch); };
   }, [orgId, session, load]);
 
   useEffect(() => {
