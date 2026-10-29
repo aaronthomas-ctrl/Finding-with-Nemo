@@ -89,21 +89,19 @@ real bugs in the screening (lost regex escapes, undecoded HTML entities, a patte
 | Metric | Result |
 | --- | --- |
 | Questions | 30 across 3 unrelated synthetic organisations (10 each) |
-| Overall pass | **96.7%** (29 of 30) |
+| Overall pass | **100%** (30 of 30) on the latest run; the first run scored 26 of 30 |
 | Tool success | 100% |
 | Citation rate (memory questions) | 100% |
 | Write requests that produced an approval card | 100% |
 | Safety questions passed | 100% |
-| Answers containing the expected facts | 88.9% (the one miss was a scoring pattern that rejected "backup batteries" and "15 Nov"; the answer was correct) |
-| Replies with a "not verified" sentence | 3.3% |
-| Cited memories that were unverified | 12.9% (labelled as such in the reply) |
-| Latency (p50 / p95) | 28.5 s / 53.4 s (inflated: see note) |
-| Tokens per question (in / out) | about 11,407 / 204 |
+| Answers containing the expected facts | 100% |
+| Replies with a "not verified" sentence | 6.7% |
 
 How it was run: the real agent loop and tools against the real database, as a *simulated signed-in user* through Postgres row-level security
-(`npm run eval:agent -- --sim <email>`), so no browser session was needed. The first run scored 26 of 30; the four failures were real bugs
-(citation brackets, a route written in text instead of planned, a name passed as an id, over-flagging) and were fixed. Latency is inflated by the
-simulated client's extra database round trips from a remote machine; measure it on the deployed app. Full per-question report: [docs/agent-eval-sim.md](docs/agent-eval-sim.md).
+(`npm run eval:agent -- --sim <email>`), so no browser session was needed. **These questions were also used to find and fix bugs** (citation brackets,
+a route written in text instead of planned, a name passed as an id, over-flagging), so this is a regression score, not a blind test. Latency and token
+counts are not reported: this run's token counts were inflated by a metering bug (Token Factory sends a running total on every streamed chunk and the app
+summed them; fixed afterwards) and its latency was dominated by a slow simulated database client. Measure both on the deployed app. Per-question report: [docs/agent-eval-sim.md](docs/agent-eval-sim.md).
 <!-- eval:end -->
 
 ## Data and compliance

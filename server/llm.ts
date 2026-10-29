@@ -79,12 +79,17 @@ export async function* chatStream(opts: ChatOptions) {
     { ...body(opts), stream: true, stream_options: { include_usage: true } },
     { signal: opts.signal },
   );
-  for await (const chunk of stream as any) {
-    if (chunk.usage && opts.onUsage) {
-      await opts.onUsage({ role: opts.role, tokensIn: chunk.usage.prompt_tokens, tokensOut: chunk.usage.completion_tokens });
+  // Token Factory may attach a running total to every chunk, not just the last. Keep the latest and report it once,
+  // otherwise a 7-chunk answer is billed as seven answers and the daily cap fills up for nothing.
+  let last: { prompt_tokens: number; completion_tokens: number } | null = null;
+  try {
+    for await (const chunk of stream as any) {
+      if (chunk.usage) last = chunk.usage;
+      const delta = chunk.choices?.[0]?.delta;
+      if (delta) yield delta as { content?: string; tool_calls?: Array<{ index: number; id?: string; function?: { name?: string; arguments?: string } }> };
     }
-    const delta = chunk.choices?.[0]?.delta;
-    if (delta) yield delta as { content?: string; tool_calls?: Array<{ index: number; id?: string; function?: { name?: string; arguments?: string } }> };
+  } finally {
+    if (last && opts.onUsage) await opts.onUsage({ role: opts.role, tokensIn: last.prompt_tokens, tokensOut: last.completion_tokens });
   }
 }
 
