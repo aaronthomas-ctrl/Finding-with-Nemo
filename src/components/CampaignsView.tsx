@@ -101,6 +101,7 @@ export function CampaignsView() {
             <option value="">Any tag</option>{allTags.map((t) => <option key={t as string}>{t as string}</option>)}
           </select>
           <p className="text-xs text-slate-400 flex items-center gap-1"><Users className="w-3.5 h-3.5" />{picked.length} clients match</p>
+          {(!form.title.trim() || picked.length === 0) && <p className="text-xs text-amber-400">{!form.title.trim() ? 'Enter a campaign name to continue.' : 'No saved clients match these filters yet. Save some businesses from Prospecting first, or loosen the tier and tag filters.'}</p>}
           <button disabled={busy || !form.title.trim() || picked.length === 0} onClick={create}
             className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm">{busy ? 'Saving' : 'Create'}</button>
         </section>

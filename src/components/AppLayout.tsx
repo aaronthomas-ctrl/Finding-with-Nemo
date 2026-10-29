@@ -18,7 +18,6 @@ export function AppLayout() {
     { to: "/memory", icon: Brain, label: "Memory" },
     { to: "/voice", icon: Mic, label: "Voice notes" },
     { to: "/due-today", icon: Clock, label: "Due Today" },
-    { to: "/predicted-demand", icon: Activity, label: "Predictions" },
     { to: "/forecast", icon: TrendingUp, label: "Reorder timing" },
     { to: "/campaigns", icon: Megaphone, label: "Campaigns" },
     { to: "/settings", icon: Settings, label: "Settings" },

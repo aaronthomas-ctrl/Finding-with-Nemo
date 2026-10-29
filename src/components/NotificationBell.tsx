@@ -78,7 +78,7 @@ export function NotificationBell({ className = '' }: { className?: string }) {
             {unread > 0 && <button onClick={() => markRead(items.filter((n) => !n.read_at).map((n) => n.id))} className="text-xs text-slate-400 hover:text-slate-200 flex items-center gap-1"><CheckCheck className="w-3 h-3" />Mark all read</button>}
           </div>
           <div className="max-h-96 overflow-y-auto divide-y divide-slate-800">
-            {items.length === 0 && <p className="p-4 text-xs text-slate-500">Nothing yet. Watchers report here when something changes.</p>}
+            {items.length === 0 && <p className="p-4 text-xs text-slate-500">Nothing yet. Approvals and finished jobs show up here.</p>}
             {items.map((n) => (
               <button key={n.id} onClick={() => go(n)} className={`w-full text-left px-3 py-2.5 hover:bg-slate-800/60 ${n.read_at ? 'opacity-60' : ''}`}>
                 <div className="flex items-start gap-2">

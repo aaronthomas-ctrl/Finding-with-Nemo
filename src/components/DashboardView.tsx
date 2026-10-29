@@ -142,32 +142,6 @@ export function DashboardView() {
             </div>
           </div>
 
-          {/* 2. Predicted Demand */}
-          <div className="bg-[#12151a] border border-slate-800 rounded-xl flex flex-col h-80">
-            <div className="p-4 border-b border-slate-800 flex justify-between items-center shrink-0">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-amber-500" />
-                <h3 className="font-semibold text-slate-200">Predicted Demand</h3>
-                <span className="bg-slate-800 text-slate-300 text-xs px-2 py-0.5 rounded-full">{forecastItems.length}</span>
-              </div>
-              <button onClick={() => navigate('/forecast')} className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1">
-                View all <ArrowRight className="w-3 h-3" />
-              </button>
-            </div>
-            <div className="p-2 flex-1 overflow-y-auto custom-scrollbar">
-              {forecastItems.slice(0, 5).map((item, idx) => (
-                <div key={idx} onClick={() => navigate(`/pipeline/${item.client.id}`)} className="flex items-center justify-between p-3 hover:bg-slate-800/50 rounded-lg cursor-pointer group">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-slate-200 truncate group-hover:text-amber-400">{item.client.name}</p>
-                    <p className="text-xs text-slate-400 truncate">{item.productLine} • {item.predictedNextDate.toLocaleDateString()}</p>
-                  </div>
-                  <div className={`w-2 h-2 rounded-full shrink-0 ml-2 ${item.confidence === 'High' ? 'bg-green-500' : item.confidence === 'Medium' ? 'bg-amber-500' : 'bg-slate-500'}`} title={`${item.confidence} confidence`} />
-                </div>
-              ))}
-              {forecastItems.length === 0 && <p className="text-sm text-slate-500 p-4 text-center">No predictions in window.</p>}
-            </div>
-          </div>
-
           {/* 3. Going Cold */}
           <div className="bg-[#12151a] border border-slate-800 rounded-xl flex flex-col h-80">
             <div className="p-4 border-b border-slate-800 flex justify-between items-center shrink-0">
