@@ -4,7 +4,6 @@ import { suggestSearchTags, applySearchTags, autoTagBatch } from './tools/tags';
 import { findNearbySavedClients, getClient, whatsDueToday, updateClient, logInteraction, setFollowUp, addLead } from './tools/clients';
 import { planRoute } from './tools/routing';
 import { researchCompany, recallMemories } from './tools/research';
-import { createWatcher } from './tools/watch';
 import { checkClaimTool, extractProjects, addProject, predictNextNeed } from './tools/insight';
 
 export const TOOLS: ToolDef[] = [
@@ -12,7 +11,7 @@ export const TOOLS: ToolDef[] = [
   searchPlaces, drawSearchArea, saveCompanies, saveSearchZone,
   findNearbySavedClients, getClient, whatsDueToday,
   autoTagBatch, updateClient, logInteraction, setFollowUp, addLead,
-  planRoute, researchCompany, recallMemories, createWatcher,
+  planRoute, researchCompany, recallMemories,
   checkClaimTool, extractProjects, addProject, predictNextNeed,
 ];
 

@@ -1,4 +1,5 @@
 import { apiFetch } from '../lib/api';
+import { useOrgTagNames } from '../lib/profile';
 import { AgentPanel, UiAction } from './AgentPanel';
 import { useNavigate } from 'react-router-dom';
 import { useState, useCallback, useEffect, useMemo } from 'react';
@@ -23,6 +24,7 @@ export function ProspectingView() {
   const [isSearching, setIsSearching] = useState(false);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
   const [searchTags, setSearchTags] = useState<string[]>([]);
+  const orgTagNames = useOrgTagNames();
   
   // Place search and regional saved clients state
   const [searchedPlace, setSearchedPlace] = useState<PlaceSearchResult | null>(null);
@@ -336,6 +338,10 @@ export function ProspectingView() {
 
   const handleSearch = async (queries: string[]) => {
     if (!bounds) return;
+    if (queries.length === 0) {
+      window.alert('Type a keyword or pick a tag first. Add tags in Settings or by onboarding your business, and "Find Leads Here" will search for them.');
+      return;
+    }
     setIsSearching(true);
     setCompanies([]);
     setSelectedCompanyId(null);
@@ -348,7 +354,7 @@ export function ProspectingView() {
     let allResults: CompanyResult[] = [];
     
     try {
-      const queriesToRun = queries.length > 0 ? queries : ["business"];
+      const queriesToRun = queries;
       
       for (const q of queriesToRun) {
         let nextPageToken: string | undefined = undefined;
@@ -582,7 +588,7 @@ export function ProspectingView() {
           setSearchedPlace={setSearchedPlace}
           searchRadiusKm={searchRadiusKm}
           setSearchRadiusKm={setSearchRadiusKm}
-          onSearchBusinessesInRegion={() => handleSearch([])}
+          onSearchBusinessesInRegion={() => handleSearch(searchTags.length ? searchTags : orgTagNames.slice(0, 5))}
           isSearchingBusinesses={isSearching}
           routeStops={routeStops}
           onToggleRouteStop={handleToggleRouteStop}

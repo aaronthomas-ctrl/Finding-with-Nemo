@@ -22,7 +22,6 @@ import { CampaignsView } from './components/CampaignsView';
 import { PredictedDemandView } from './components/PredictedDemandView';
 import { ProjectsView } from './components/ProjectsView';
 import { VoiceNotesView } from './components/VoiceNotesView';
-import { WatchersView } from './components/WatchersView';
 const MemoryView = lazy(() => import('./components/MemoryView').then((m) => ({ default: m.MemoryView })));
 
 
@@ -54,7 +53,6 @@ export default function App() {
           <Route path="/predicted-demand" element={<PredictedDemandView />} />
           <Route path="/projects" element={<ProjectsView />} />
           <Route path="/voice" element={<VoiceNotesView />} />
-          <Route path="/watchers" element={<WatchersView />} />
           <Route path="/memory" element={<Suspense fallback={<div className="p-6 text-sm text-slate-500">Loading memory view...</div>}><MemoryView /></Suspense>} />
           <Route path="/settings" element={<SettingsView />} />
         </Route>

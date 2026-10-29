@@ -42,6 +42,19 @@ export function useProductLines(): string[] {
   return cfg.product_lines ?? [];
 }
 
+/** The org's own approved tag names. These are what "Find Leads Here" searches for; nothing is hardcoded. */
+export function useOrgTagNames(): string[] {
+  const { activeOrg } = useAuth();
+  const [names, setNames] = useState<string[]>([]);
+  useEffect(() => {
+    const id = activeOrg?.org_id ?? getActiveOrgId();
+    if (!id) return;
+    supabase.from('tag_definitions').select('name').eq('org_id', id).neq('status', 'rejected')
+      .then(({ data }) => setNames((data ?? []).map((t: any) => String(t.name))));
+  }, [activeOrg?.org_id]);
+  return names;
+}
+
 /** Search keyword suggestions: the org's own tag names and keywords. */
 export function useSearchSuggestions(): string[] {
   const { activeOrg } = useAuth();

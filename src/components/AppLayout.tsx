@@ -17,7 +17,6 @@ export function AppLayout() {
     { to: "/projects", icon: Building2, label: "Projects" },
     { to: "/memory", icon: Brain, label: "Memory" },
     { to: "/voice", icon: Mic, label: "Voice notes" },
-    { to: "/watchers", icon: Eye, label: "Watchers" },
     { to: "/due-today", icon: Clock, label: "Due Today" },
     { to: "/predicted-demand", icon: Activity, label: "Predictions" },
     { to: "/forecast", icon: TrendingUp, label: "Reorder timing" },

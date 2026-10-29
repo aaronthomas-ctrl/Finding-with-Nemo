@@ -13,6 +13,21 @@ import { CompanyResult } from '../types';
 import { Client } from '../db';
 import { calculateDistanceKm, createGeoCirclePoints } from '../lib/geo';
 import { PlaceSearchBar, PlaceSearchResult } from './PlaceSearchBar';
+import { usePresetRegions } from '../lib/profile';
+
+/** Opens the map on the org's first preset area (generated at onboarding from its country); runs once. */
+function HomeView() {
+  const map = useMap();
+  const presets = usePresetRegions();
+  const done = React.useRef(false);
+  useEffect(() => {
+    if (!map || done.current || presets.length === 0) return;
+    done.current = true;
+    map.setCenter({ lat: presets[0].lat, lng: presets[0].lng });
+    map.setZoom(11);
+  }, [map, presets.length]);
+  return null;
+}
 import { NearbySavedCustomersTray } from './NearbySavedCustomersTray';
 import { RouteStop, OptimizedRouteResult } from '../lib/routeOptimization';
 import {
@@ -436,13 +451,14 @@ export function MapArea({
         )}
 
         <Map
-          defaultCenter={{ lat: 24.4539, lng: 54.3773 }} // Abu Dhabi
-          defaultZoom={12}
+          defaultCenter={{ lat: 25, lng: 30 }} // neutral world view until the org's own area loads
+          defaultZoom={3}
           mapId="PROSPECTING_MAP_ID"
           internalUsageAttributionIds={['gmp_mcp_codeassist_v1_aistudio']}
           className="w-full h-full"
           disableDefaultUI={true}
         >
+          <HomeView />
           <MapController
             onBoundsChange={onBoundsChange}
             customPath={customPath}
