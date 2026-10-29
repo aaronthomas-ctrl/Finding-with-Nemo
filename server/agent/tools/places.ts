@@ -49,36 +49,65 @@ const areaSchema = {
 export const searchPlaces: ToolDef = {
   name: 'search_places',
   write: false,
-  description: 'Search Google Places for businesses inside an area. Results are held in memory only; use save_companies to keep some.',
+  description: 'Find businesses with the Google Maps Places API inside an area (the area the user drew, else the map view). Give "tags" to search by the organisation\'s tags (each tag is searched with its keywords), and/or a free "query". This is a map search, not a web search. Results are held in memory only; use save_companies to keep some.',
   parameters: {
     type: 'object',
-    properties: { query: { type: 'string', description: 'What to look for, e.g. "vegan bakery"' }, area: areaSchema },
-    required: ['query'],
+    properties: {
+      query: { type: 'string', description: 'Free text, e.g. "vegan bakery"' },
+      tags: { type: 'array', items: { type: 'string' }, description: 'Tag names to search for. Omit both query and tags to use the tags the user has active, else the organisation\'s own tags.' },
+      area: areaSchema,
+    },
   },
   async run(args, ctx) {
     const { area, label } = await resolveArea(ctx, args.area);
-    const body: any = { textQuery: String(args.query), pageSize: 20 };
-    if (area) {
-      const r = boundingRect(area);
-      body.locationRestriction = { rectangle: { low: { latitude: r.low.lat, longitude: r.low.lng }, high: { latitude: r.high.lat, longitude: r.high.lng } } };
-    }
-    const data = await placesCall(ctx.req,
-      'places.id,places.displayName,places.formattedAddress,places.location,places.primaryTypeDisplayName,places.websiteUri,places.nationalPhoneNumber,places.googleMapsUri,places.addressComponents', body);
 
-    const places: any[] = (data.places || []).filter((p: any) => !area || inArea({ lat: p.location.latitude, lng: p.location.longitude }, area));
-    const placeIds = places.map((p) => p.id);
+    // What to search for: the user's words, the tags they asked for, or the tags they have on screen.
+    const defs = new Map(ctx.org.tags.map((t) => [t.name.toLowerCase(), t]));
+    const wantedTags: string[] = (args.tags?.length ? args.tags : !args.query ? (ctx.ui.tags?.length ? ctx.ui.tags : ctx.org.tags.map((t) => t.name)) : []).map(String);
+    const queries: Array<{ text: string; tag?: string }> = [];
+    if (args.query) queries.push({ text: String(args.query).slice(0, 120) });
+    for (const t of wantedTags.slice(0, 4)) {
+      const d = defs.get(t.toLowerCase());
+      queries.push({ text: d?.keywords?.[0] && !t.toLowerCase().includes(d.keywords[0].toLowerCase()) ? `${t} ${d.keywords[0]}` : t, tag: t });
+    }
+    if (!queries.length) return { data: { error: 'Say what to look for, or add some tags first.' } };
+
+    const field = 'places.id,places.displayName,places.formattedAddress,places.location,places.primaryTypeDisplayName,places.websiteUri,places.nationalPhoneNumber,places.googleMapsUri,places.addressComponents';
+    const body = (text: string): any => {
+      const b: any = { textQuery: text.slice(0, 120), pageSize: 20 };
+      if (area) {
+        const r = boundingRect(area);
+        b.locationRestriction = { rectangle: { low: { latitude: r.low.lat, longitude: r.low.lng }, high: { latitude: r.high.lat, longitude: r.high.lng } } };
+      }
+      return b;
+    };
+
+    const merged = new Map<string, any>();
+    for (const q of queries.slice(0, 5)) {
+      const data = await placesCall(ctx.req, field, body(q.text));
+      for (const p of (data.places || []) as any[]) {
+        if (area && !inArea({ lat: p.location.latitude, lng: p.location.longitude }, area)) continue;
+        const hit = merged.get(p.id) ?? { p, tags: new Set<string>() };
+        if (q.tag) hit.tags.add(q.tag);
+        merged.set(p.id, hit);
+      }
+    }
+    const places = [...merged.values()];
+    const placeIds = places.map((x) => x.p.id);
     const { data: saved } = placeIds.length
       ? await ctx.req.sb.from('clients').select('place_id').eq('org_id', ctx.req.orgId).in('place_id', placeIds)
       : { data: [] as any[] };
     const savedSet = new Set((saved ?? []).map((c: any) => c.place_id));
 
-    const rows = places.slice(0, 20).map((p) => {
-      const id = `r${ctx.state.results.size + 1}`;
+    // New search: the earlier numbered results are replaced, but anything on the user's screen (s1, s2, ...) stays saveable.
+    for (const k of [...ctx.state.results.keys()]) if (k.startsWith('r')) ctx.state.results.delete(k);
+    const rows = places.slice(0, 30).map(({ p, tags }, i) => {
+      const id = `r${i + 1}`;
       const rec = {
         id, placeId: p.id as string, name: clip(p.displayName?.text), address: clip(p.formattedAddress, 200),
         lat: p.location.latitude as number, lng: p.location.longitude as number, category: clip(p.primaryTypeDisplayName?.text, 60),
         website: (p.websiteUri as string) || '', phone: (p.nationalPhoneNumber as string) || '', googleMapsUri: (p.googleMapsUri as string) || '',
-        region: regionFromComponents(p.addressComponents), alreadySaved: savedSet.has(p.id),
+        region: regionFromComponents(p.addressComponents), alreadySaved: savedSet.has(p.id), foundByTags: [...tags] as string[],
       };
       ctx.state.results.set(id, rec);
       return rec;
@@ -88,8 +117,8 @@ export const searchPlaces: ToolDef = {
     return {
       untrusted: true,
       data: {
-        area: label, count: rows.length,
-        results: rows.map((r) => ({ id: r.id, name: r.name, address: r.address, category: r.category, website: r.website || undefined, region: r.region, already_saved: r.alreadySaved })),
+        searched_with: queries.map((q) => q.text), area: label, count: rows.length,
+        results: rows.map((r) => ({ id: r.id, name: r.name, address: r.address, category: r.category, website: r.website || undefined, region: r.region, found_by_tags: r.foundByTags.length ? r.foundByTags : undefined, already_saved: r.alreadySaved })),
       },
       ui: [{ type: 'show_places', places: rows.map((r) => ({ id: r.id, name: r.name, address: r.address, lat: r.lat, lng: r.lng, category: r.category, website: r.website, placeId: r.placeId, region: r.region })) }],
     };
@@ -145,8 +174,8 @@ export const saveCompanies: ToolDef = {
   parameters: {
     type: 'object',
     properties: {
-      result_ids: { type: 'array', items: { type: 'string' }, description: 'ids like r1, r2 from search_places' },
-      tags: { type: 'array', items: { type: 'string' }, description: 'Tags to put on all of them' },
+      result_ids: { type: 'array', items: { type: 'string' }, description: 'ids like r1, r2 from search_places, or s1, s2 for the results already on the screen' },
+      tags: { type: 'array', items: { type: 'string' }, description: 'Tags to put on all of them. Omit to use the tags the results were found with, or the tags the user has active.' },
     },
     required: ['result_ids'],
   },
@@ -154,12 +183,16 @@ export const saveCompanies: ToolDef = {
     const picked = (args.result_ids || []).map((id: string) => ctx.state.results.get(id)).filter(Boolean).filter((r: any) => !r.alreadySaved);
     if (!picked.length) return { data: { error: 'No new results to save. Search first, or they are already saved.' } };
     const names = picked.slice(0, 5).map((r: any) => r.name).join(', ');
+    const tags: string[] = [...new Set<string>([...(args.tags?.length ? args.tags : [...(ctx.ui.tags ?? []), ...picked.flatMap((r: any) => r.foundByTags ?? [])])].map((t: string) => String(t).toLowerCase().trim().slice(0, 40)).filter(Boolean))];
+    // Tags the organisation does not have yet are added when the user approves, so the agent searches with them next time.
+    const known = new Set(ctx.org.tags.map((t) => t.name.toLowerCase()));
+    const newTags = tags.filter((t) => !known.has(t));
     return {
-      data: { proposed: picked.length },
+      data: { proposed: picked.length, tags, new_tags_to_remember: newTags },
       proposal: {
-        summary: `Save ${picked.length} compan${picked.length === 1 ? 'y' : 'ies'}: ${names}${picked.length > 5 ? ` and ${picked.length - 5} more` : ''}`,
+        summary: `Save ${picked.length} compan${picked.length === 1 ? 'y' : 'ies'}: ${names}${picked.length > 5 ? ` and ${picked.length - 5} more` : ''}${tags.length ? `, tagged ${tags.join(', ')}` : ''}${newTags.length ? `. Also remember the new tag${newTags.length > 1 ? 's' : ''} ${newTags.join(', ')} for future searches` : ''}`,
         bulk: picked.length > 10,
-        payload: { companies: picked, tags: (args.tags || []).map((t: string) => String(t).toLowerCase().slice(0, 40)) },
+        payload: { companies: picked, tags, newTags },
       },
     };
   },
@@ -197,6 +230,9 @@ export const saveCompanies: ToolDef = {
     });
     const { data, error } = await req.sb.from('clients').upsert(rows, { onConflict: 'org_id,place_id', ignoreDuplicates: true }).select('id');
     if (error) throw new Error(error.message);
+    if (payload.newTags?.length) {
+      await req.sb.from('tag_definitions').upsert(payload.newTags.map((t: string) => ({ org_id: req.orgId, name: t, description: null, keywords: [t], origin: 'user', status: 'approved' })), { onConflict: 'org_id,name', ignoreDuplicates: true });
+    }
     return { message: `Saved ${data?.length ?? 0} of ${rows.length} (the rest were already in the pipeline).` };
   },
 };

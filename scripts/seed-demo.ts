@@ -49,7 +49,7 @@ async function seedOrg(o: SeedOrg, userId: string | null) {
   const rand = rng([...o.id].reduce((a, c) => a + c.charCodeAt(0), 0));
   await db.query('begin');
   try {
-    await q('insert into public.organizations (id, name, kind, country, created_by) values ($1,$2,$3,$4,$5)', [o.id, o.name, 'business', o.country, userId]);
+    await q('insert into public.organizations (id, name, kind, country, created_by, plan_limits) values ($1,$2,$3,$4,$5,$6)', [o.id, o.name, 'business', o.country, userId, JSON.stringify({ tokens_per_day: 10000000, tavily_per_day: 500, google_per_day: 2000 })]);
     await q(`insert into public.business_profiles (org_id, summary, offerings, target_customers, config, status, approved_at) values ($1,$2,$3,$4,$5,'approved',now())`, [
       o.id, o.summary, JSON.stringify(o.offerings), JSON.stringify(o.targets),
       JSON.stringify({ categories: o.categories, tier_rules: o.tierRules, presets: o.presets, cadence_days: { 1: 7, 2: 14, 3: 30, 4: 60 }, product_lines: o.products }),

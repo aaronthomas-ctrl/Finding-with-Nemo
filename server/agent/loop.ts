@@ -9,7 +9,8 @@ import { verifyReply } from './verify';
 import { fence, screenWithPatterns } from '../security/untrusted';
 import { config } from '../config';
 import { byName, toolSpecs } from './registry';
-import type { AgentEvent, RunState, UiContext } from './types';
+import type { AgentEvent, Entity, RunState, UiContext } from './types';
+import { screenContextBlock } from './screen';
 
 const MAX_STEPS = 8;
 const HISTORY = 20;
@@ -31,14 +32,31 @@ export async function runAgent(req: AuthedRequest, body: Body, emit: (e: AgentEv
     if (t.error) throw new Error(t.error.message);
     threadId = t.data.id as string;
   }
-  const { data: past } = await sb.from('chat_messages').select('role,content').eq('thread_id', threadId).in('role', ['user', 'assistant'])
+  const { data: past } = await sb.from('chat_messages').select('role,content,metadata').eq('thread_id', threadId).in('role', ['user', 'assistant'])
     .order('created_at', { ascending: false }).limit(HISTORY);
   await sb.from('chat_messages').insert({ org_id: orgId, thread_id: threadId, role: 'user', content: message });
 
   const run = await sb.from('agent_runs').insert({ org_id: orgId, thread_id: threadId, user_id: user.id, model: config.models.super }).select('id').single();
   if (run.error) throw new Error(run.error.message);
-  const state: RunState = { runId: run.data.id, results: new Map(), tainted: false, userMessage: message, lastArea: body.ui?.polygon ?? undefined };
   const ui: UiContext = body.ui ?? {};
+  const state: RunState = { runId: run.data.id, results: new Map(), tainted: false, userMessage: message, lastArea: body.ui?.polygon ?? undefined, entities: new Map() };
+
+  // Short-term memory: the clients and places earlier turns of this conversation touched.
+  for (const m of [...(past ?? [])].reverse()) for (const e of ((m as any).metadata?.entities ?? []) as Entity[]) state.entities.set(e.id, e);
+
+  // What is on the user's screen. Results shown there become saveable as s1, s2, ... without searching again.
+  (ui.results ?? []).slice(0, 40).forEach((r, i) => state.results.set(`s${i + 1}`, {
+    id: `s${i + 1}`, placeId: r.placeId, name: r.name, address: r.address ?? '', lat: r.lat, lng: r.lng, category: r.category ?? '',
+    website: r.website ?? '', phone: r.phone ?? '', googleMapsUri: r.googleMapsUri ?? '', region: r.region ?? '', alreadySaved: false,
+  }));
+  let selectedClient: { id: string; name: string } | null = null;
+  if (ui.selected) {
+    const sel = ui.selected;
+    let q = sb.from('clients').select('id,name').eq('org_id', orgId).limit(1);
+    q = sel.clientId ? q.eq('id', sel.clientId) : sel.placeId ? q.eq('place_id', sel.placeId) : q.ilike('name', `%${sel.name.replace(/[%_]/g, '')}%`);
+    const found = (await q).data?.[0];
+    if (found) { selectedClient = found; state.entities.set(found.id, { id: found.id, name: found.name, kind: 'client' }); }
+  }
 
   let tokensIn = 0, tokensOut = 0;
   const sink = tokenSink(sb, orgId);
@@ -73,13 +91,14 @@ export async function runAgent(req: AuthedRequest, body: Body, emit: (e: AgentEv
       content: agentSystemPrompt({ orgName: org.name, kind: org.kind, summary: org.summary, lookingFor: org.lookingFor, tags: org.tags.map((t) => t.name), today: new Date().toISOString().slice(0, 10) })
         + (recalled.length
           ? `\n\nWhat this organisation already knows (memories). Use them, and cite the ones you rely on as [m:xxxxxxxx] using the id shown. Memories marked unverified have no confirmed source: say so if you use them.\n${memoryBlock(recalled as any)}`
-          : '\n\nNo stored memories matched this message.'),
+          : '\n\nNo stored memories matched this message.')
+        + screenContextBlock(ui, state, selectedClient),
     },
     ...(past ?? []).reverse().map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
     { role: 'user', content: message },
   ];
 
-  const trace = { toolCalls: [] as any[], proposals: [] as any[], ui: [] as any[] };
+  const trace = { toolCalls: [] as any[], proposals: [] as any[], ui: [] as any[], entities: [] as Entity[] };
   let finalText = '';
   let lastStepText = '';
   let toolSteps = 0;
@@ -141,6 +160,7 @@ export async function runAgent(req: AuthedRequest, body: Body, emit: (e: AgentEv
               trace.proposals.push({ id: approvalId, tool: tool.name, summary: res.proposal.summary });
               (res.data as any) = { ...(res.data as object), status: 'Proposal shown to the user. Nothing has changed yet; they must approve it.' };
             }
+            collectEntities(res.data, state);
             const json = JSON.stringify(res.data);
             if (res.untrusted) {
               const screen = screenWithPatterns(json);
@@ -181,6 +201,7 @@ export async function runAgent(req: AuthedRequest, body: Body, emit: (e: AgentEv
     if (v.text !== finalText) { finalText = v.text; emit({ type: 'replace', text: v.text, notVerified: v.notVerified }); }
   }
 
+  trace.entities = [...state.entities.values()].slice(-12);
   const saved = await sb.from('chat_messages').insert({
     org_id: orgId, thread_id: threadId, role: 'assistant', content: finalText.trim() || (failed ? `(${failed})` : '(no reply)'), metadata: trace,
   }).select('id').single();
@@ -192,4 +213,16 @@ export async function runAgent(req: AuthedRequest, body: Body, emit: (e: AgentEv
     status: failed ? (failed === 'stopped' ? 'stopped' : 'failed') : 'done', tokens_in: tokensIn, tokens_out: tokensOut, ended_at: new Date().toISOString(),
   }).eq('id', state.runId).eq('org_id', orgId);
   emit({ type: 'done', threadId: threadId!, messageId: saved.data?.id ?? '' });
+}
+
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Remember every client a tool result mentioned, so the next message can say "them" or "that client". */
+function collectEntities(data: unknown, state: RunState, depth = 0) {
+  if (!data || typeof data !== 'object' || depth > 4) return;
+  if (Array.isArray(data)) { for (const x of data.slice(0, 30)) collectEntities(x, state, depth + 1); return; }
+  const o = data as Record<string, any>;
+  if (typeof o.id === 'string' && UUID.test(o.id) && typeof o.name === 'string') state.entities.set(o.id, { id: o.id, name: o.name.slice(0, 80), kind: 'client' });
+  for (const v of Object.values(o)) if (v && typeof v === 'object') collectEntities(v, state, depth + 1);
 }

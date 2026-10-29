@@ -8,7 +8,15 @@ export interface UiContext {
   polygon?: LatLng[] | null;
   place?: { name: string; location: LatLng } | null;
   path?: string;
+  /** The search tags the user has active in the sidebar. */
+  tags?: string[];
+  /** The businesses currently listed and pinned on screen (from a search the user or the agent ran). */
+  results?: Array<{ placeId: string; name: string; address?: string; lat: number; lng: number; category?: string; website?: string; phone?: string; googleMapsUri?: string; region?: string }>;
+  /** What the user has clicked: a business on the map, which may or may not be a saved client. */
+  selected?: { name: string; address?: string; placeId?: string; clientId?: string } | null;
 }
+
+export interface Entity { id: string; name: string; kind: 'client' | 'place' }
 
 export type UiAction =
   | { type: 'navigate'; to: string }
@@ -16,7 +24,7 @@ export type UiAction =
   | { type: 'focus_place'; name: string; lat: number; lng: number }
   | { type: 'show_places'; places: Array<{ id: string; name: string; address: string; lat: number; lng: number; category?: string; website?: string; placeId: string; region?: string }> }
   | { type: 'show_nearby'; clientIds: string[]; center: LatLng; radiusKm: number }
-  | { type: 'open_route'; clientIds: string[]; routeId?: string }
+  | { type: 'open_route'; clientIds: string[]; routeId?: string; start?: { name: string; lat: number; lng: number } }
   | { type: 'highlight_memories'; ids: string[] };
 
 export type AgentEvent =
@@ -38,6 +46,8 @@ export interface RunState {
   userMessage: string;
   /** Last area the agent drew or the user selected, so it can be saved as a zone. */
   lastArea?: LatLng[];
+  /** Clients and places this conversation has touched, so "this client" and "them" keep their meaning next turn. */
+  entities: Map<string, Entity>;
 }
 
 export interface ToolCtx {

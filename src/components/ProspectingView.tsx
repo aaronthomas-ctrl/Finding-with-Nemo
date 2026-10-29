@@ -22,6 +22,7 @@ export function ProspectingView() {
   const [companies, setCompanies] = useState<CompanyResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+  const [searchTags, setSearchTags] = useState<string[]>([]);
   
   // Place search and regional saved clients state
   const [searchedPlace, setSearchedPlace] = useState<PlaceSearchResult | null>(null);
@@ -173,7 +174,9 @@ export function ProspectingView() {
           .map((id) => all.find((c: Client) => c.id === id))
           .filter((c: Client | undefined): c is Client => !!c && typeof c.lat === 'number' && typeof c.lng === 'number')
           .map((c: Client) => ({ id: c.id, name: c.name, address: c.address, lat: c.lat as number, lng: c.lng as number, category: c.category, phone: c.phone, status: c.status, tier: c.tier }));
-        setRouteStops(stops);
+        // A named start point goes first: the drawer plans from the first stop, so the route begins there.
+        const withStart: RouteStop[] = a.start ? [{ id: 'route-start', name: a.start.name, lat: a.start.lat, lng: a.start.lng, isStartingPoint: true }, ...stops] : stops;
+        setRouteStops(withStart);
         setOptimizedRoute(null);
         setIsRouteDrawerOpen(true);
         break;
@@ -508,6 +511,7 @@ export function ProspectingView() {
         </div>
 
         <ResultsSidebar 
+          onTagsChange={setSearchTags}
           bounds={bounds}
           customPath={customPath}
           onSearch={handleSearch} 
@@ -540,6 +544,9 @@ export function ProspectingView() {
         bounds={bounds} 
         customPath={customPath} 
         searchedPlace={searchedPlace}
+        results={companies}
+        activeTags={searchTags}
+        selectedCompany={companies.find((c) => c.id === selectedCompanyId) ?? null}
         onUiAction={handleAgentAction}
         onRefreshDB={() => {
            // Basic refresh for saved zones

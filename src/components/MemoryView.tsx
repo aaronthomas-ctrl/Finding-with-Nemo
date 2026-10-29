@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ForceGraph3D from '3d-force-graph';
+import * as THREE from 'three';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { Brain, Loader2, RefreshCw, ShieldCheck, ShieldAlert, ExternalLink, Plus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { apiFetch, getActiveOrgId } from '../lib/api';
@@ -76,29 +78,99 @@ export function MemoryView() {
 
   const visible = useMemo(() => mems.filter((m) => m.x != null && !hidden.has(m.kind)), [mems, hidden]);
 
-  // Build the graph once.
+  // Build the graph once: glowing points in space.
   useEffect(() => {
     if (!host.current) return;
-    const g = (ForceGraph3D as any)()(host.current)
-      .backgroundColor('#0c0e12')
+    const el = host.current;
+
+    // One soft white glow, tinted per node and added on top of the dark background so overlapping points shine.
+    const glow = (() => {
+      const c = document.createElement('canvas'); c.width = c.height = 128;
+      const g = c.getContext('2d')!;
+      const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+      gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.16, 'rgba(255,255,255,0.9)');
+      gr.addColorStop(0.42, 'rgba(255,255,255,0.2)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+      return new THREE.CanvasTexture(c);
+    })();
+
+    const g = (ForceGraph3D as any)({ controlType: 'orbit' })(el)
+      .backgroundColor('#03040b')
       .showNavInfo(false)
-      .nodeRelSize(4)
-      .nodeOpacity(0.95)
-      .linkOpacity(0.35)
-      .linkColor(() => '#475569')
-      .linkWidth(0.6)
       .cooldownTicks(0)
-      .nodeLabel((n: any) => `<div style="max-width:260px;font:12px sans-serif"><b>${KIND_LABEL[n.kind] ?? n.kind}</b>${n.verified ? ' ✓' : ' (unverified)'}<br/>${String(n.content).replace(/</g, '&lt;').slice(0, 220)}${n.srcLabel ? `<br/><i>${n.srcLabel}</i>` : ''}</div>`)
-      .nodeColor((n: any) => (lit.current.has(n.id) ? (pulse.current ? '#ffffff' : n.color) : n.verified ? n.color : `${n.color}77`))
-      .nodeVal((n: any) => (lit.current.has(n.id) ? (pulse.current ? 14 : 8) : n.verified ? 2.2 : 1.4))
+      .linkColor(() => 'rgba(140,170,255,0.55)')
+      .linkOpacity(0.35)
+      .linkWidth(0.3)
+      .linkDirectionalParticles(1)
+      .linkDirectionalParticleWidth(1.4)
+      .linkDirectionalParticleSpeed(0.0035)
+      .linkDirectionalParticleColor(() => '#bcd0ff')
+      .nodeThreeObjectExtend(false)
+      .nodeThreeObject((n: any) => {
+        const mat = new THREE.SpriteMaterial({ map: glow, color: new THREE.Color(n.color), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, opacity: n.verified ? 1 : 0.5 });
+        const sp = new THREE.Sprite(mat);
+        const base = n.verified ? 12 : 8;
+        sp.scale.set(base, base, 1);
+        sp.userData = { base, phase: Math.random() * Math.PI * 2 };
+        return sp;
+      })
+      .nodeLabel((n: any) => `<div style="max-width:260px;font:12px sans-serif;padding:6px 8px;border-radius:8px;background:rgba(8,10,24,.92);border:1px solid rgba(140,170,255,.35)"><b style="color:${n.color}">${KIND_LABEL[n.kind] ?? n.kind}</b>${n.verified ? ' ✓' : ' (unverified)'}<br/>${String(n.content).replace(/</g, '&lt;').slice(0, 220)}${n.srcLabel ? `<br/><i style="opacity:.7">${n.srcLabel}</i>` : ''}</div>`)
       .onNodeClick((n: any) => setSelected(n.mem));
     graph.current = g;
-    const resize = () => host.current && g.width(host.current.clientWidth).height(host.current.clientHeight);
+    if (import.meta.env.DEV) (window as any).__graph = g;
+
+    // A faint starfield far behind the memories.
+    const starCount = 2600;
+    const pos = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount; i++) {
+      const r = 900 + Math.random() * 900, t = Math.random() * Math.PI * 2, p = Math.acos(2 * Math.random() - 1);
+      pos[i * 3] = r * Math.sin(p) * Math.cos(t); pos[i * 3 + 1] = r * Math.sin(p) * Math.sin(t); pos[i * 3 + 2] = r * Math.cos(p);
+    }
+    const starGeo = new THREE.BufferGeometry();
+    starGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xbfd0ff, size: 3.4, map: glow, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: false }));
+    g.scene().add(stars);
+    // Opaque deep-space background (the CSS behind the canvas must not show through the bloom), and a few faint nebula clouds.
+    g.scene().background = new THREE.Color(0x02030a);
+    for (const [x, y, z, hex, size] of [[-520, 220, -700, 0x5b3cc4, 1500], [560, -260, -760, 0x1f6fb5, 1700], [60, 380, -900, 0x9b2d8f, 1300]] as Array<[number, number, number, number, number]>) {
+      const cloud = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow, color: hex, transparent: true, opacity: 0.1, depthWrite: false, blending: THREE.AdditiveBlending }));
+      cloud.position.set(x, y, z); cloud.scale.set(size, size, 1);
+      g.scene().add(cloud);
+    }
+
+    // Bloom makes the bright points bleed light, which is what makes them look like they shine.
+    try {
+      const bloom = new UnrealBloomPass(new THREE.Vector2(el.clientWidth || 800, el.clientHeight || 600), 0.9, 0.7, 0.08);
+      g.postProcessingComposer().addPass(bloom);
+    } catch (e) { console.warn('[memory view] bloom unavailable:', e); }
+
+    // Slow drift so the space feels alive; it pauses while the user is dragging.
+    const controls = g.controls();
+    if (controls) { controls.autoRotate = true; controls.autoRotateSpeed = 0.45; controls.enableDamping = true; controls.dampingFactor = 0.08; }
+
+    const resize = () => el && g.width(el.clientWidth).height(el.clientHeight);
     resize();
     const ro = new ResizeObserver(resize);
-    ro.observe(host.current);
-    const timer = setInterval(() => { pulse.current = !pulse.current; if (lit.current.size) g.nodeColor(g.nodeColor()).nodeVal(g.nodeVal()); }, 550);
-    return () => { clearInterval(timer); ro.disconnect(); g._destructor?.(); graph.current = null; };
+    ro.observe(el);
+
+    // Twinkle, and pulse the memories the chat just used. Scales are set directly, so nothing is rebuilt each frame.
+    let raf = 0;
+    const tick = (t: number) => {
+      stars.rotation.y += 0.00008;
+      for (const n of g.graphData().nodes as any[]) {
+        const o = n.__threeObj as any;
+        if (!o) continue;
+        const { base, phase } = o.userData;
+        const isLit = lit.current.has(n.id);
+        const s = isLit ? base * (2.1 + 0.9 * Math.sin(t / 220)) : base * (1 + 0.08 * Math.sin(t / 900 + phase));
+        o.scale.set(s, s, 1);
+        o.material.opacity = isLit ? 1 : n.verified ? 0.95 : 0.5;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); g._destructor?.(); graph.current = null; };
   }, []);
 
   // Feed data. Positions are fixed, so the layout is the UMAP result and nothing drifts.
@@ -112,16 +184,24 @@ export function MemoryView() {
         srcLabel: s ? (s.url ? new URL(s.url).hostname : s.title || '') : '' };
     });
     g.graphData({ nodes, links: links.filter((l) => ids.has(l.from_id) && ids.has(l.to_id)).map((l) => ({ source: l.from_id, target: l.to_id })) });
-    if (nodes.length) setTimeout(() => g.zoomToFit(600, 80), 200);
+    if (nodes.length) {
+      // Orbit around the middle of the memories, not the origin, so the rotation keeps them centred.
+      const mid = (k: 'x' | 'y' | 'z') => nodes.reduce((a, n: any) => a + (n[k] ?? 0), 0) / nodes.length;
+      const cx = mid('x'), cy = mid('y'), cz = mid('z');
+      g.controls()?.target?.set(cx, cy, cz);
+      // Frame the cloud from its own spread (the built-in zoom-to-fit cannot measure glowing sprites).
+      const radius = Math.max(60, ...nodes.map((n: any) => Math.hypot((n.x ?? 0) - cx, (n.y ?? 0) - cy, (n.z ?? 0) - cz)));
+      const dist = radius * 2.4;
+      setTimeout(() => g.cameraPosition({ x: cx + dist * 0.35, y: cy + dist * 0.2, z: cz + dist }, { x: cx, y: cy, z: cz }, 900), 150);
+    }
   }, [visible, links, sources]);
 
   // Memories the chat just used light up.
   useEffect(() => onMemoriesUsed((ids) => {
     lit.current = new Set(ids);
-    graph.current?.nodeColor(graph.current.nodeColor()).nodeVal(graph.current.nodeVal());
     const first = visible.find((m) => ids.includes(m.id));
     if (first && graph.current) graph.current.cameraPosition({ x: (first.x ?? 0) * 1.4, y: (first.y ?? 0) * 1.4, z: (first.z ?? 0) * 1.4 + 160 }, { x: first.x ?? 0, y: first.y ?? 0, z: first.z ?? 0 }, 900);
-    setTimeout(() => { lit.current = new Set(); graph.current?.nodeColor(graph.current.nodeColor()).nodeVal(graph.current.nodeVal()); }, 12000);
+    setTimeout(() => { lit.current = new Set(); }, 12000);
   }), [visible]);
 
   const addNote = async () => {
@@ -143,7 +223,7 @@ export function MemoryView() {
   return (
     <div className="flex-1 flex flex-col md:flex-row min-h-0">
       <div className="relative flex-1 min-h-[320px]">
-        <div ref={host} className="absolute inset-0" />
+        <div ref={host} className="absolute inset-0" style={{ background: '#02030a' }} />
         {mems.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center text-center text-sm text-slate-500 p-6 pointer-events-none">
             <div><Brain className="w-10 h-10 mx-auto mb-3 text-slate-600" />No memories yet. Chat with the agent, research a company, or paste a note.</div>

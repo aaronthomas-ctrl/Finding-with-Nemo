@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Bot, Send, User, Loader2, X, Plus, Check, Ban, History, Square, Wrench, ShieldCheck } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import type { CompanyResult } from '../types';
 import { apiFetch } from '../lib/api';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../auth/AuthProvider';
@@ -13,7 +14,7 @@ export type UiAction =
   | { type: 'focus_place'; name: string; lat: number; lng: number }
   | { type: 'show_places'; places: Array<{ id: string; name: string; address: string; lat: number; lng: number; category?: string; website?: string; placeId: string; region?: string }> }
   | { type: 'show_nearby'; clientIds: string[]; center: { lat: number; lng: number }; radiusKm: number }
-  | { type: 'open_route'; clientIds: string[]; routeId?: string }
+  | { type: 'open_route'; clientIds: string[]; routeId?: string; start?: { name: string; lat: number; lng: number } }
   | { type: 'highlight_memories'; ids: string[] };
 
 interface Proposal { id: string; tool: string; summary: string; payload: any; bulk: boolean; state?: 'pending' | 'working' | 'approved' | 'rejected' | 'error'; note?: string; excluded?: number[] }
@@ -25,6 +26,10 @@ interface AgentPanelProps {
   bounds?: google.maps.LatLngBounds | null;
   customPath?: google.maps.LatLngLiteral[] | null;
   searchedPlace?: { name: string; location: { lat: number; lng: number } } | null;
+  /** What the user sees, so the agent can answer "these results", "this client" and "my tags". */
+  results?: CompanyResult[];
+  activeTags?: string[];
+  selectedCompany?: CompanyResult | null;
   onUiAction?: (a: UiAction) => void;
   onRefreshDB?: () => void;
   isHidden?: boolean;
@@ -38,7 +43,7 @@ const TOOL_LABEL: Record<string, string> = {
   whats_due_today: 'Checking what is due', get_client: 'Reading the client', auto_tag_batch: 'Reading websites',
 };
 
-export function AgentPanel({ bounds, customPath, searchedPlace, onUiAction, onRefreshDB, isHidden = false }: AgentPanelProps) {
+export function AgentPanel({ bounds, customPath, searchedPlace, results, activeTags, selectedCompany, onUiAction, onRefreshDB, isHidden = false }: AgentPanelProps) {
   const { canWrite } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -87,6 +92,12 @@ export function AgentPanel({ bounds, customPath, searchedPlace, onUiAction, onRe
           ui: {
             bounds: bounds ? { low: { lat: bounds.getSouthWest().lat(), lng: bounds.getSouthWest().lng() }, high: { lat: bounds.getNorthEast().lat(), lng: bounds.getNorthEast().lng() } } : null,
             polygon: customPath ?? null, place: searchedPlace ?? null,
+            tags: activeTags ?? [],
+            results: (results ?? []).slice(0, 40).map((c) => ({
+              placeId: c.id, name: c.name, address: c.address, lat: c.location.latitude, lng: c.location.longitude,
+              category: c.category, website: c.website, phone: c.phone, googleMapsUri: c.googleMapsUri, region: c.region,
+            })),
+            selected: selectedCompany ? { name: selectedCompany.name, address: selectedCompany.address, placeId: selectedCompany.id } : null,
           },
         }),
       });

@@ -25,6 +25,8 @@ interface ResultsSidebarProps {
   onDeleteZone: (id: string) => void;
   onGenerateReport: (zone: PolygonZone) => void;
   onOpenCustomerUpload?: () => void;
+  /** Tells the parent which search tags are active, so the chat agent can use and remember them. */
+  onTagsChange?: (tags: string[]) => void;
   // Regional Place & Nearby Saved Customers props
   searchedPlace?: PlaceSearchResult | null;
   onSelectPlace?: (place: PlaceSearchResult | null) => void;
@@ -38,6 +40,7 @@ interface ResultsSidebarProps {
 }
 
 export function ResultsSidebar({ 
+  onTagsChange,
   bounds, 
   customPath, 
   onSearch, 
@@ -69,6 +72,7 @@ export function ResultsSidebar({
   const [showSaveZone, setShowSaveZone] = useState(false);
   const [currentInput, setCurrentInput] = useState('');
   const [activeSearchTags, setActiveSearchTags] = useState<string[]>([]);
+  useEffect(() => { onTagsChange?.(activeSearchTags); }, [activeSearchTags]); // eslint-disable-line react-hooks/exhaustive-deps
   const [filterText, setFilterText] = useState('');
   const [tagFilters, setTagFilters] = useState<string[]>([]);
   const [showTagsFilterBoard, setShowTagsFilterBoard] = useState(true);

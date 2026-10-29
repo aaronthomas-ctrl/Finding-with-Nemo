@@ -142,15 +142,18 @@ function Members() {
             <div key={m.user_id} className="flex items-center justify-between gap-3 text-sm">
               <div className="min-w-0"><div className="text-slate-200 truncate">{names[m.user_id] || `Member ${m.user_id.slice(0, 6)}`}{me ? ' (you)' : ''}</div><div className="text-[11px] text-slate-500">{ROLE_HELP[m.role]}</div></div>
               <div className="flex items-center gap-2 shrink-0">
-                <select disabled={me} value={m.role} onChange={(e) => setMemberRole(m.user_id, e.target.value as OrgRole)} className={`${input} py-1`}>
-                  {ROLES.map((r) => <option key={r}>{r}</option>)}
-                </select>
+                {me
+                  ? <span title="You cannot change your own role, so the organisation always keeps an owner." className="px-3 py-1 rounded-lg bg-slate-800 text-xs text-slate-300">{m.role} · you</span>
+                  : <select value={m.role} onChange={(e) => setMemberRole(m.user_id, e.target.value as OrgRole)} className={`${input} py-1`}>
+                      {ROLES.map((r) => <option key={r}>{r}</option>)}
+                    </select>}
                 {!me && <button onClick={() => remove(m.user_id)} className="p-1.5 text-slate-500 hover:text-red-400" title="Remove"><Trash2 className="w-4 h-4" /></button>}
               </div>
             </div>
           );
         })}
       </div>
+      {members.length === 1 && <p className="text-xs text-slate-500 mt-3">You are the only member. Create an invite code below, send it to a teammate, and they pick it up when they join. Then you can change their role here.</p>}
       <div className="mt-5 pt-4 border-t border-slate-800 space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <select value={role} onChange={(e) => setRole(e.target.value as OrgRole)} className={input}>{ROLES.filter((r) => r !== 'owner').map((r) => <option key={r}>{r}</option>)}</select>
