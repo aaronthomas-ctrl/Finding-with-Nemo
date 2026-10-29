@@ -15,11 +15,13 @@ export function screenContextBlock(ui: UiContext, state: RunState, selectedClien
     const lat = ui.polygon.reduce((a, p) => a + p.lat, 0) / ui.polygon.length;
     const lng = ui.polygon.reduce((a, p) => a + p.lng, 0) / ui.polygon.length;
     lines.push(`- The user has drawn an area on the map (${ui.polygon.length} points, centred at ${round(lat)}, ${round(lng)}). "This area", "here" and "the area I marked" mean that area. search_places uses it automatically when you give no area. Never ask the user to draw one.`);
+  } else if (ui.place && ui.radiusKm) {
+    lines.push(`- The user's selected search area is a ${ui.radiusKm} km circle around "${clip(ui.place.name)}" (${round(ui.place.location.lat)}, ${round(ui.place.location.lng)}), shown on the map. "This area", "here" and "the selected area" mean it. search_places uses it automatically when you give no area. Never ask the user to confirm, show or draw an area.`);
   } else if (ui.bounds) {
     const lat = (ui.bounds.low.lat + ui.bounds.high.lat) / 2, lng = (ui.bounds.low.lng + ui.bounds.high.lng) / 2;
     lines.push(`- No area is drawn. The map is showing the region centred at ${round(lat)}, ${round(lng)}; "here" means that view (search_places uses it automatically).`);
   }
-  if (ui.place) lines.push(`- The user searched for the place "${clip(ui.place.name)}" (${round(ui.place.location.lat)}, ${round(ui.place.location.lng)}).`);
+  if (ui.place && !ui.radiusKm) lines.push(`- The user searched for the place "${clip(ui.place.name)}" (${round(ui.place.location.lat)}, ${round(ui.place.location.lng)}).`);
   if (ui.tags?.length) lines.push(`- Search tags the user has active right now: ${ui.tags.map((t) => clip(t, 40)).join(', ')}. Treat them as the user's own tags.`);
 
   const shown = [...state.results.values()].filter((r) => String(r.id).startsWith('s'));

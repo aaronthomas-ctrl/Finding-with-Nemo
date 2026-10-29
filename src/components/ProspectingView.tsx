@@ -550,6 +550,7 @@ export function ProspectingView() {
         bounds={bounds} 
         customPath={customPath} 
         searchedPlace={searchedPlace}
+        radiusKm={searchRadiusKm}
         results={companies}
         activeTags={searchTags}
         selectedCompany={companies.find((c) => c.id === selectedCompanyId) ?? null}

@@ -26,6 +26,7 @@ interface AgentPanelProps {
   bounds?: google.maps.LatLngBounds | null;
   customPath?: google.maps.LatLngLiteral[] | null;
   searchedPlace?: { name: string; location: { lat: number; lng: number } } | null;
+  radiusKm?: number;
   /** What the user sees, so the agent can answer "these results", "this client" and "my tags". */
   results?: CompanyResult[];
   activeTags?: string[];
@@ -43,7 +44,7 @@ const TOOL_LABEL: Record<string, string> = {
   whats_due_today: 'Checking what is due', get_client: 'Reading the client', auto_tag_batch: 'Reading websites',
 };
 
-export function AgentPanel({ bounds, customPath, searchedPlace, results, activeTags, selectedCompany, onUiAction, onRefreshDB, isHidden = false }: AgentPanelProps) {
+export function AgentPanel({ bounds, customPath, searchedPlace, radiusKm, results, activeTags, selectedCompany, onUiAction, onRefreshDB, isHidden = false }: AgentPanelProps) {
   const { canWrite } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
@@ -91,7 +92,7 @@ export function AgentPanel({ bounds, customPath, searchedPlace, results, activeT
           message: text, threadId,
           ui: {
             bounds: bounds ? { low: { lat: bounds.getSouthWest().lat(), lng: bounds.getSouthWest().lng() }, high: { lat: bounds.getNorthEast().lat(), lng: bounds.getNorthEast().lng() } } : null,
-            polygon: customPath ?? null, place: searchedPlace ?? null,
+            polygon: customPath ?? null, place: searchedPlace ?? null, radiusKm: searchedPlace ? radiusKm ?? null : null,
             tags: activeTags ?? [],
             results: (results ?? []).slice(0, 40).map((c) => ({
               placeId: c.id, name: c.name, address: c.address, lat: c.location.latitude, lng: c.location.longitude,

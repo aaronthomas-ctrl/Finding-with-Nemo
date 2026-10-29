@@ -7,6 +7,8 @@ export interface UiContext {
   bounds?: { low: LatLng; high: LatLng } | null;
   polygon?: LatLng[] | null;
   place?: { name: string; location: LatLng } | null;
+  /** Radius of the circle drawn around `place` on the map. */
+  radiusKm?: number | null;
   path?: string;
   /** The search tags the user has active in the sidebar. */
   tags?: string[];

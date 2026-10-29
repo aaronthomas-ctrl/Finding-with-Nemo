@@ -32,6 +32,7 @@ export async function resolveArea(ctx: ToolCtx, a: any): Promise<{ area: Area | 
   }
   if (kind === 'current_view' && ctx.ui.bounds) return { area: { kind: 'rect', ...ctx.ui.bounds }, label: 'the current map view' };
   if ((kind === 'drawn_area' || !kind) && ctx.ui.polygon?.length) return { area: { kind: 'polygon', path: ctx.ui.polygon }, label: 'the drawn area' };
+  if (!kind && ctx.ui.place && ctx.ui.radiusKm) return { area: { kind: 'circle', center: ctx.ui.place.location, radius_m: Math.min(50, ctx.ui.radiusKm) * 1000 }, label: `${ctx.ui.radiusKm} km around ${ctx.ui.place.name}` };
   if (!kind && ctx.ui.bounds) return { area: { kind: 'rect', ...ctx.ui.bounds }, label: 'the current map view' };
   return { area: null, label: 'anywhere' };
 }
