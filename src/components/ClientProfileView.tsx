@@ -246,7 +246,7 @@ export function ClientProfileView({ clientId, onClose }: { clientId?: string; on
       month: 'short',
       year: 'numeric'
     }) : 'Recent';
-    const toAppend = `\n\n[Google Search Findings - ${dateStr}]\n${activeSearchResult.summary}`;
+    const toAppend = `\n\n[Web research findings - ${dateStr}]\n${activeSearchResult.summary}`;
     const updated = current ? `${current}${toAppend}` : activeSearchResult.summary;
     setWhatTheyDo(updated);
     await updateClient({ whatTheyDo: updated });
@@ -447,7 +447,7 @@ export function ClientProfileView({ clientId, onClose }: { clientId?: string; on
                 ) : (
                   <Search className="w-3.5 h-3.5 text-sky-400" />
                 )}
-                <span>{activeSearchResult ? 'Update Search Data' : 'Google Search Data'}</span>
+                <span>{activeSearchResult ? 'Update Search Data' : 'Web Research'}</span>
               </button>
             </div>
           </div>
@@ -540,14 +540,14 @@ export function ClientProfileView({ clientId, onClose }: { clientId?: string; on
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-wider">
-                          Recent Data from Google Search
+                          Web research with citations
                         </h3>
                         <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 flex items-center gap-1">
-                          <Search className="w-3 h-3" /> Google Search & Places
+                          <Search className="w-3 h-3" /> Tavily web search
                         </span>
                       </div>
                       <p className="text-xs text-slate-400 mt-0.5">
-                        Real-time Google search data, verified place profile, and direct web sources
+                        Recent web results written up as a cited brief. Only claims whose quote appears on the source page are kept
                       </p>
                     </div>
                   </div>
@@ -565,7 +565,7 @@ export function ClientProfileView({ clientId, onClose }: { clientId?: string; on
                     ) : (
                       <>
                         <RefreshCw className="w-3.5 h-3.5" />
-                        <span>{activeSearchResult ? 'Refresh Search' : 'Fetch Google Search Data'}</span>
+                        <span>{activeSearchResult ? 'Refresh Search' : 'Fetch Web Research'}</span>
                       </>
                     )}
                   </button>
@@ -621,7 +621,7 @@ export function ClientProfileView({ clientId, onClose }: { clientId?: string; on
                   <div className="py-8 text-center flex flex-col items-center justify-center space-y-3 bg-slate-900/40 border border-slate-800/80 rounded-lg">
                     <RefreshCw className="w-6 h-6 animate-spin text-sky-400" />
                     <p className="text-xs text-slate-300 font-medium">
-                      Gathering recent data for &quot;{client.name}&quot; from Google Search...
+                      Gathering recent data for &quot;{client.name}&quot; from the web...
                     </p>
                     <p className="text-[11px] text-slate-500">
                       Querying live web sources and analyzing verified company information
@@ -714,7 +714,7 @@ export function ClientProfileView({ clientId, onClose }: { clientId?: string; on
                               >
                                 <div className="flex items-start justify-between gap-2">
                                   <span className="text-xs font-medium text-slate-200 group-hover:text-sky-300 transition-colors line-clamp-2">
-                                    {title}
+                                    <span className="text-sky-400 font-mono mr-1">[{idx + 1}]</span>{title}
                                   </span>
                                   <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover:text-sky-400 shrink-0 mt-0.5 transition-colors" />
                                 </div>
@@ -748,7 +748,7 @@ export function ClientProfileView({ clientId, onClose }: { clientId?: string; on
                       No Google Search data fetched yet for {client.name}
                     </p>
                     <p className="text-[11px] text-slate-500 mb-3 max-w-md mx-auto">
-                      Click below to retrieve real-time matching business information, recent corporate news, and top web sources directly from Google Search.
+                      Click below to retrieve real-time matching business information, recent corporate news, and top web sources directly from the web, each claim linked to its source page.
                     </p>
                     <button
                       onClick={fetchGoogleSearchData}
@@ -756,7 +756,7 @@ export function ClientProfileView({ clientId, onClose }: { clientId?: string; on
                       className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-medium transition-colors shadow-sm cursor-pointer"
                     >
                       <Search className="w-3.5 h-3.5" />
-                      <span>Fetch Recent Data from Google Search</span>
+                      <span>Fetch Web research with citations</span>
                     </button>
                   </div>
                 )}
