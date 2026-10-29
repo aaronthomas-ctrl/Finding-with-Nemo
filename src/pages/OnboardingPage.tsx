@@ -62,6 +62,12 @@ export function OnboardingPage() {
   });
 
   const buildPack = () => run(async () => {
+    if (!isBusiness && (f.country.trim() || f.cities.trim()) && activeOrg) {
+      // Individuals tell us where they are too, so the map opens there and searches stay local.
+      const cities = f.cities.split(',').map((c) => c.trim()).filter(Boolean);
+      if (f.country.trim()) await supabase.from('organizations').update({ country: f.country.trim() }).eq('id', activeOrg.org_id);
+      if (cities.length) await supabase.from('business_profiles').update({ config: { cities } }).eq('org_id', activeOrg.org_id);
+    }
     const res = await apiFetch('/api/onboarding/profile-pack', { method: 'POST', body: JSON.stringify(need) });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Could not build the profile');
@@ -135,6 +141,12 @@ export function OnboardingPage() {
             </p>
             <textarea className={`${input} mt-4 h-32`} value={need.text} onChange={(e) => setNeed({ ...need, text: e.target.value })}
               placeholder={isBusiness ? 'We supply ...' : 'I am looking for ...'} />
+            {!isBusiness && (
+              <div className="grid sm:grid-cols-2 gap-3 mt-3">
+                <input className={input} placeholder="Country" value={f.country} onChange={(e) => setF({ ...f, country: e.target.value })} />
+                <input className={input} placeholder="City or cities, comma separated" value={f.cities} onChange={(e) => setF({ ...f, cities: e.target.value })} />
+              </div>
+            )}
             {isBusiness && <input className={`${input} mt-3`} placeholder="Website (optional)" value={need.website} onChange={(e) => setNeed({ ...need, website: e.target.value })} />}
             <button className={`${primary} mt-4`} disabled={busy || (need.text.trim().length < 30 && !need.website.trim())} onClick={buildPack}>
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}

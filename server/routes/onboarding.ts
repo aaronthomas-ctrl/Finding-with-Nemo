@@ -109,7 +109,9 @@ onboarding.post('/onboarding/profile-pack', async (req, res) => {
       });
     }
 
-    const presetNames: string[] = (pack.preset_areas || []).slice(0, 6).map(String);
+    // The cities the user typed come first, so the map opens on them; the model's suggestions fill the rest.
+    const typed: string[] = Array.isArray((org.config as any).cities) ? (org.config as any).cities.map(String) : [];
+    const presetNames: string[] = Array.from(new Set([...typed, ...(pack.preset_areas || []).map(String)])).slice(0, 6);
     const presets = (await Promise.all(presetNames.map((n) => geocodeName(n, org.country).catch(() => null)))).filter(Boolean);
     await addUsage(r.sb, r.orgId, { google: presetNames.length });
 
@@ -139,6 +141,8 @@ onboarding.post('/onboarding/profile-pack/approve', async (req, res) => {
   const p = req.body?.pack;
   if (!p || typeof p !== 'object') return res.status(400).json({ error: 'pack required' });
   try {
+    const existing = await r.sb.from('business_profiles').select('config').eq('org_id', r.orgId).maybeSingle();
+    const cities = Array.isArray((existing.data?.config as any)?.cities) ? (existing.data!.config as any).cities : [];
     const profile = await r.sb.from('business_profiles').update({
       summary: String(p.summary || '').slice(0, 2000),
       looking_for: req.body?.lookingFor ? String(req.body.lookingFor).slice(0, 2000) : null,
@@ -146,7 +150,7 @@ onboarding.post('/onboarding/profile-pack/approve', async (req, res) => {
       target_customers: p.target_customers || [],
       config: {
         categories: p.categories || [], tier_rules: p.tier_rules || [], presets: p.presets || [],
-        cadence_days: p.cadence_days || {}, product_lines: p.product_lines || [],
+        cadence_days: p.cadence_days || {}, product_lines: p.product_lines || [], cities,
       },
       status: 'approved', approved_by: r.user.id, approved_at: new Date().toISOString(),
     }).eq('org_id', r.orgId);
