@@ -38,6 +38,7 @@ export function VoiceNotesView() {
   const [seconds, setSeconds] = useState(0);
   const [draft, setDraft] = useState<{ blob: Blob; mime: string; durationS: number } | null>(null);
   const [transcript, setTranscript] = useState('');
+  const [speechIssue, setSpeechIssue] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
   const [last, setLast] = useState<SubmitResult | null>(null);
@@ -73,7 +74,7 @@ export function VoiceNotesView() {
   }, [load]);
 
   const start = async () => {
-    setMsg(null); setLast(null); setDraft(null); setTranscript('');
+    setMsg(null); setLast(null); setDraft(null); setTranscript(''); setSpeechIssue(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find((m) => MediaRecorder.isTypeSupported(m)) ?? '';
@@ -95,7 +96,7 @@ export function VoiceNotesView() {
         s.continuous = true; s.interimResults = false;
         s.lang = LANGS.find((l) => l.code === language)?.bcp47 || navigator.language;
         s.onresult = (e: any) => { let t = ''; for (let i = e.resultIndex; i < e.results.length; i++) if (e.results[i].isFinal) t += e.results[i][0].transcript + ' '; if (t) setTranscript((p) => (p + t).trim()); };
-        s.onerror = () => {};
+        s.onerror = (ev: any) => { if (ev?.error && ev.error !== 'no-speech' && ev.error !== 'aborted') setSpeechIssue(ev.error === 'not-allowed' ? 'Browser speech recognition is blocked.' : ev.error === 'network' ? 'Browser speech recognition could not reach its service.' : ev.error === 'language-not-supported' ? 'This browser cannot transcribe the chosen language.' : `Browser speech recognition failed (${ev.error}).`); };
         s.onend = () => { if (speech.current === s && rec.current?.state === 'recording') { try { s.start(); } catch { /* ignore */ } } };
         try { s.start(); speech.current = s; } catch { /* ignore */ }
       }
@@ -204,6 +205,7 @@ export function VoiceNotesView() {
           {draft && (
             <div className="space-y-2">
               <audio controls src={URL.createObjectURL(draft.blob)} className="w-full" />
+              {!serverAsr && !transcript.trim() && <p className="text-xs text-amber-400">{speechIssue ?? 'The browser did not capture a transcript.'} Type or paste what was said below (any language), then save. Chrome on a normal connection usually works.</p>}
               <textarea className={`${field} h-24`} value={transcript} onChange={(e) => setTranscript(e.target.value)}
                 placeholder={serverAsr ? 'Optional: the server will transcribe the audio.' : 'Transcript from your browser. Fix any mistakes before saving.'} />
               <button onClick={save} disabled={busy} className="px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm flex items-center gap-2">
