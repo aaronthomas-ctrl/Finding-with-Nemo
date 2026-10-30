@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Finding with Nemo: judges deck</title>
+<style>
+  @page { size: 13.333in 7.5in; margin: 0; }
+  * { box-sizing: border-box; }
+  :root { --navy:#0a1730; --ink:#e8eefc; --mut:#9fb0d0; --teal:#2dd4bf; --green:#76b900; --blue:#3b82f6; --card:#12233f; }
+  body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; color: var(--ink); }
+  .slide { width: 13.333in; height: 7.5in; padding: 0.6in 0.75in; background: var(--navy); position: relative; overflow: hidden; page-break-after: always; display: flex; flex-direction: column; }
+  .slide.light { background: #f4f7fb; color: #0a1730; }
+  h1 { font-size: 54px; margin: 0 0 14px; line-height: 1.05; letter-spacing: -.5px; }
+  h2 { font-size: 38px; margin: 0 0 20px; line-height: 1.1; }
+  .light h2 { color: #0a1730; }
+  p, li { font-size: 21px; line-height: 1.4; }
+  .mut { color: var(--mut); } .light .mut { color: #475569; }
+  .row { display: flex; gap: 28px; flex: 1; min-height: 0; }
+  .col { flex: 1; min-width: 0; }
+  .card { background: var(--card); border-radius: 14px; padding: 20px 22px; }
+  .light .card { background: #fff; box-shadow: 0 2px 10px rgba(15,35,70,.10); }
+  .card h3 { margin: 0 0 6px; font-size: 24px; color: var(--teal); } .light .card h3 { color: #0f766e; }
+  .card p { margin: 0; font-size: 19px; }
+  .big { font-size: 64px; font-weight: 800; color: var(--green); line-height: 1; }
+  .light .big { color: #3f7d00; }
+  .stat { text-align: left; } .stat .lab { font-size: 18px; color: var(--mut); margin-top: 6px; } .light .stat .lab { color: #475569; }
+  img.shot { width: 100%; border-radius: 12px; border: 1px solid #2a3f66; display: block; }
+  .cap { font-size: 15px; color: var(--mut); margin-top: 6px; } .light .cap { color: #475569; }
+  table { width: 100%; border-collapse: collapse; font-size: 19px; }
+  th { text-align: left; color: var(--teal); padding: 8px 10px; font-size: 17px; border-bottom: 2px solid #2a3f66; }
+  td { padding: 8px 10px; border-bottom: 1px solid #22375a; vertical-align: top; }
+  .light th { color: #0f766e; border-bottom-color: #cbd5e1; } .light td { border-bottom-color: #e2e8f0; }
+  .pill { display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: 16px; font-weight: 700; margin-right: 8px; }
+  .u { background: #1d4ed8; color: #fff; } .s { background: #047857; color: #fff; } .n { background: #b45309; color: #fff; } .e { background: #6d28d9; color: #fff; } .t { background: #0e7490; color: #fff; }
+  .num { font-size: 15px; color: var(--mut); position: absolute; right: 0.75in; bottom: 0.4in; } .light .num { color: #64748b; }
+  ul { margin: 0; padding-left: 24px; } li { margin: 6px 0; }
+  .foot { margin-top: auto; font-size: 15px; color: var(--mut); } .light .foot { color: #64748b; }
+  .brand { font-size: 17px; letter-spacing: .12em; color: var(--teal); font-weight: 700; margin-bottom: 18px; }
+  .big-q { font-size: 34px; line-height: 1.25; }
+</style></head><body>
+
+<!-- 1 Title -->
+<section class="slide" style="justify-content:center">
+  <div class="brand">NEBIUS x NVIDIA GLOBAL AI HACKATHON  ·  BEST APPS AND AGENTS</div>
+  <h1>Finding with Nemo</h1>
+  <p class="big-q" style="max-width:9.5in;margin:0 0 28px">An agent that finds nearby businesses, researches them on the live web, proves every claim with a source quote, and plans your route.</p>
+  <p class="mut">NVIDIA Nemotron 3 on Nebius Token Factory  ·  Tavily live web  ·  Open source (Apache 2.0)</p>
+  <p class="foot">finding-with-nemo.onrender.com   ·   github.com/aaronthomas-ctrl/Finding-with-Nemo</p>
+</section>
+
+<!-- 2 Problem -->
+<section class="slide light">
+  <h2>When I went out to find customers, nothing told me what was around me</h2>
+  <div class="row" style="align-items:stretch">
+    <div class="col card"><h3>No starting point</h3><p>Sales tools assume you already know who to call. Real prospecting starts earlier: which businesses are nearby, and who is worth a visit?</p></div>
+    <div class="col card"><h3>Knowledge walks away</h3><p>The note from the last visit, the web research, what changed this week. It lives in one person's head or phone.</p></div>
+    <div class="col card"><h3>AI you cannot check</h3><p>Most assistants state things with no way to verify them. A wrong claim to a customer costs trust.</p></div>
+  </div>
+  <p class="foot" style="font-size:19px"><b>So we built one tool:</b> instant research, and an agent that acts, in the field and in your own space.</p>
+  <div class="num">2</div>
+</section>
+
+<!-- 3 What it does -->
+<section class="slide">
+  <h2>What it does</h2>
+  <div class="row">
+    <div class="col" style="flex:0.95">
+      <div class="card" style="margin-bottom:12px"><h3>1. Pick an area, ask in plain words</h3><p>The agent sees your screen and searches Google Maps for your own tags inside it.</p></div>
+      <div class="card" style="margin-bottom:12px"><h3>2. Approve, never surprised</h3><p>Anything that changes your data is a proposal you approve. New tags are remembered.</p></div>
+      <div class="card" style="margin-bottom:12px"><h3>3. Cited research on demand</h3><p>Tavily brings the live web. Each finding keeps a quote that code checks on the page.</p></div>
+      <div class="card"><h3>4. Field tools and team memory</h3><p>Routes from where you are, voice notes in any language, a 3D memory of what the team knows.</p></div>
+    </div>
+    <div class="col"><img class="shot" src="../screenshots/epc-1-map-67-results.jpg"><div class="cap">Live app: 67 real EPC contractors and fabricators around Ras Al Khaimah</div></div>
+  </div>
+  <div class="num">3</div>
+</section>
+
+<!-- 4 Use cases -->
+<section class="slide light">
+  <h2>One engine, three users</h2>
+  <div class="row" style="align-items:stretch">
+    <div class="col card"><h3>Job seekers</h3><p><b>Ask:</b> "Find software and IT companies hiring in my selected area."</p><p style="margin-top:10px" class="mut">Employers around you, and what each does. No ten browser tabs.</p></div>
+    <div class="col card" style="border:3px solid #0f766e"><h3>Sales teams  <span class="pill s" style="font-size:13px">LIVE DEMO</span></h3><p><b>Ask:</b> "Find welding fabrication companies and EPC contractors in my selected area."</p><p style="margin-top:10px" class="mut">A prospect list you can trust, with sources and a route for the day.</p></div>
+    <div class="col card"><h3>Procurement</h3><p><b>Ask:</b> "Find steel plate and welding consumables suppliers in my selected area."</p><p style="margin-top:10px" class="mut">A supplier shortlist in minutes, on the map.</p></div>
+  </div>
+  <p class="foot" style="font-size:19px">Built for any trade and any city: a cafe supplier, a solar installer, a dental supplier and a welding supplier all run on the same code.</p>
+  <div class="num">4</div>
+</section>
+
+<!-- 5 Demo flow -->
+<section class="slide">
+  <h2>Demo: welding supplies for fabricators and EPC contractors</h2>
+  <div class="row" style="flex:none">
+    <div class="col"><img class="shot" style="height:3.55in;object-fit:cover;object-position:top" src="../screenshots/epc-2-pipeline-18-clients.jpg"><div class="cap">Saved pipeline: tagged, tiered, with status</div></div>
+    <div class="col"><img class="shot" style="height:3.55in;object-fit:cover;object-position:top" src="../screenshots/epc-4-route-from-start-point.jpg"><div class="cap">Route that starts where you are</div></div>
+  </div>
+  <p class="foot" style="font-size:20px;color:#e8eefc"><b>Find</b> → <b>Approve and save</b> → <b>Research with citations</b> → <b>Route</b> → <b>Voice note</b> → <b>Memory</b></p>
+  <div class="num">5</div>
+</section>
+
+<!-- 6 Trust -->
+<section class="slide light">
+  <h2>Trust is built in: no claim without a source</h2>
+  <div class="row">
+    <div class="col">
+      <div class="card" style="margin-bottom:14px"><h3>Evidence Gate</h3><p>A finding counts as verified only if its quote appears word for word on the source page. Unproven claims are dropped.</p></div>
+      <div class="card" style="margin-bottom:14px"><h3>Reply verifier</h3><p>A second model pass marks any sentence in an answer with no supporting source as "not verified".</p></div>
+      <div class="row" style="flex:none;gap:14px">
+        <div class="col card stat"><div class="big">13/13</div><div class="lab">prompt-injection attacks flagged, none reached the user</div></div>
+        <div class="col card stat"><div class="big">30/30</div><div class="lab">agent regression questions passed across 3 businesses*</div></div>
+      </div>
+    </div>
+    <div class="col"><img class="shot" src="../screenshots/epc-3-agent-cited-answer.jpg"><div class="cap">Answer with source badges; memory dots lit behind it</div></div>
+  </div>
+  <p class="foot">*A regression score: those questions were also used to find and fix bugs. Per-organisation row-level security. Hard per-user AI request limit.</p>
+  <div class="num">6</div>
+</section>
+
+<!-- 7 Models -->
+<section class="slide">
+  <h2>Nemotron on Nebius Token Factory: one job each</h2>
+  <table>
+    <tr><th style="width:230px">Model</th><th style="width:330px">Does</th><th>Features</th></tr>
+    <tr><td><span class="pill u">Ultra</span> 550B-A55B</td><td>Careful reasoning, fact extraction</td><td>Onboarding profile, quote-checked facts from pages and voice notes, fact-checking, project finding</td></tr>
+    <tr><td><span class="pill s">Super</span> 120B-A12B</td><td>The agent and the writing</td><td>Tool-calling chat agent, cited research briefs, insights, voice-note translation</td></tr>
+    <tr><td><span class="pill n">Nano</span> 30B-A3B</td><td>Fast, frequent checks</td><td>Tag suggestions, route stop picking, auto-tagging, reply verifier</td></tr>
+    <tr><td><span class="pill e">Qwen3-Embedding</span> 8B</td><td>Memory search</td><td>Every stored fact is embedded; questions find the closest; 3D memory view</td></tr>
+    <tr><td><span class="pill t">Tavily</span> live web</td><td>Search and page reading</td><td>Onboarding research, cited client research, agent news, fact-checking</td></tr>
+  </table>
+  <p class="foot">One OpenAI-compatible API on Nebius Token Factory serves all four models.  Maps (Google) and Supabase are not models.</p>
+  <div class="num">7</div>
+</section>
+
+<!-- 8 Architecture -->
+<section class="slide light">
+  <h2>How it is built</h2>
+  <div class="row" style="align-items:center">
+    <div class="col card"><h3>Browser</h3><p>React, Vite, Tailwind. Google Maps, 3D memory view (three.js).</p></div>
+    <div style="font-size:40px;color:#0f766e">→</div>
+    <div class="col card"><h3>App server</h3><p>Express, Docker image built by GitHub Actions, hosted on Render. Runs every request <b>as the signed-in user</b>.</p></div>
+    <div style="font-size:40px;color:#0f766e">→</div>
+    <div class="col">
+      <div class="card" style="margin-bottom:10px"><h3>Nebius Token Factory</h3><p>Nemotron Ultra, Super, Nano and embeddings</p></div>
+      <div class="card" style="margin-bottom:10px"><h3>Tavily</h3><p>Live web search and extract</p></div>
+      <div class="card"><h3>Supabase</h3><p>Postgres, pgvector, auth, row-level security</p></div>
+    </div>
+  </div>
+  <p class="foot" style="font-size:19px">Every write is an approval card. Web text is fenced as untrusted, and write tools are blocked after a flagged result.</p>
+  <div class="num">8</div>
+</section>
+
+<!-- 9 Honest limits -->
+<section class="slide">
+  <h2>What we learned, and what is next</h2>
+  <div class="row">
+    <div class="col card"><h3>Honest limits</h3>
+      <ul style="font-size:19px">
+        <li>Speech recognition uses the browser; Token Factory has no audio endpoint.</li>
+        <li>Embeddings are Qwen: no Nemotron embedding model was available.</li>
+        <li>Multi-step agent answers take 20 to 60 seconds.</li>
+        <li>Malayalam and Urdu translation were unreliable; Arabic and Hindi were fine.</li>
+      </ul></div>
+    <div class="col card"><h3>Next</h3>
+      <ul style="font-size:19px">
+        <li>Nemotron speech recognition for voice notes.</li>
+        <li>A Nemotron safety model for screening web text.</li>
+        <li>Scheduled watchers as Nebius Jobs.</li>
+        <li>Team assignment of leads.</li>
+      </ul></div>
+  </div>
+  <p class="foot" style="font-size:19px"><b>Lesson:</b> evidence beats confidence. A model sentence only counts when code can find its quote on the page.</p>
+  <div class="num">9</div>
+</section>
+
+<!-- 10 Try it -->
+<section class="slide" style="justify-content:center">
+  <h1 style="font-size:46px">Try it</h1>
+  <div class="card" style="max-width:9in;margin-bottom:16px"><h3>Live app</h3><p style="font-size:26px">finding-with-nemo.onrender.com</p></div>
+  <div class="card" style="max-width:9in;margin-bottom:16px"><h3>Judge sign-in</h3><p>Email: <b>ragchat1908@gmail.com</b>  ·  password in the Devpost testing instructions</p><p class="mut" style="margin-top:6px">Use the organisation selector (top of the left sidebar) to open <b>Steel Arc Welding Supplies</b> and the other demo businesses. Each user has a limited number of free AI requests.</p></div>
+  <div class="card" style="max-width:9in"><h3>Code</h3><p style="font-size:24px">github.com/aaronthomas-ctrl/Finding-with-Nemo  ·  Apache-2.0</p></div>
+  <p class="foot">Thank you.  Finding with Nemo.</p>
+</section>
+
+</body></html>

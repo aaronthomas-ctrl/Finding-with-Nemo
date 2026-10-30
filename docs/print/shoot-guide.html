@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Finding with Nemo: video shoot guide</title>
+<style>
+  @page { size: A4; margin: 14mm 13mm; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", Arial, sans-serif; color: #14213d; font-size: 10.5pt; line-height: 1.38; margin: 0; }
+  h1 { font-size: 22pt; margin: 0 0 2mm; color: #0b2545; }
+  h2 { font-size: 13.5pt; margin: 6mm 0 2mm; color: #0b2545; }
+  .sub { color: #52606d; margin: 0 0 4mm; }
+  .box { border: 1px solid #cbd5e1; border-radius: 6px; padding: 3mm 4mm; margin: 3mm 0; background: #f8fafc; }
+  .box b.t { color: #0b2545; }
+  ul { margin: 1mm 0 1mm 5mm; padding: 0; } li { margin: 0.6mm 0; }
+  table { width: 100%; border-collapse: collapse; margin: 2mm 0 4mm; }
+  th { background: #0b2545; color: #fff; text-align: left; padding: 2mm 2.5mm; font-size: 9.5pt; }
+  td { border: 1px solid #cbd5e1; padding: 2mm 2.5mm; vertical-align: top; font-size: 9.8pt; }
+  tr { page-break-inside: avoid; }
+  td.n { width: 14mm; font-weight: 700; text-align: center; background: #eef2f7; }
+  td.do { width: 58mm; } td.say { width: 74mm; background: #f1fbf7; }
+  .tag { display: inline-block; font-size: 8pt; font-weight: 700; letter-spacing: .04em; padding: 0.4mm 1.6mm; border-radius: 3px; margin-right: 1.5mm; color: #fff; }
+  .do-t { background: #1d4ed8; } .say-t { background: #047857; } .win-t { background: #b45309; }
+  .say p { margin: 0 0 1.5mm; } .win { color: #92400e; font-size: 9.3pt; margin-top: 1.5mm; }
+  .tm { color: #52606d; font-size: 8.8pt; font-weight: 600; }
+  code { font-family: Consolas, monospace; background: #e8eef6; padding: 0 1.2mm; border-radius: 3px; font-size: 9.3pt; }
+  .pb { page-break-before: always; }
+  .chk li { list-style: "☐  "; }
+  .small { font-size: 9pt; color: #52606d; }
+  img.s { width: 85mm; border: 1px solid #cbd5e1; border-radius: 4px; }
+  .two { display: flex; gap: 5mm; }
+</style></head><body>
+
+<h1>Finding with Nemo: video shoot guide</h1>
+<p class="sub">Print this. <span class="tag do-t">DO</span> is what you do on the page. <span class="tag say-t">SAY</span> is what you speak. <span class="tag win-t">WHY IT WINS</span> is the advantage the judge should notice. Target length <b>2:50</b>. Hard limit 3:00.</p>
+
+<div class="box"><b class="t">The one-line story to open with:</b> "When I went out to find customers, nothing told me what was around me. So I built Finding with Nemo: instant research and an agent that acts, in the field and in your own space, using NVIDIA Nemotron on Nebius, with Tavily for the live web."</div>
+
+<h2>Use cases to name (you will say these, and show them briefly)</h2>
+<ul>
+  <li><b>Job seekers:</b> find nearby employers and what each company does.</li>
+  <li><b>Sales teams (the live demo):</b> welding suppliers selling to fabricators and EPC contractors.</li>
+  <li><b>Procurement:</b> shortlist nearby suppliers in minutes.</li>
+</ul>
+
+<h2>Before you press record (30 minutes)</h2>
+<ul class="chk">
+  <li>On Render: <b>Manual Deploy</b> the latest image and wait for <b>Live</b>. Open <code>/api/health</code>: it must say OK.</li>
+  <li>Browser: Chrome, 1080p, zoom 100%, bookmarks hidden, notifications off, no keys or dashboards visible.</li>
+  <li>Sign in at <b>finding-with-nemo.onrender.com</b>. Use the organisation selector (top of left sidebar) to choose <b>Steel Arc Welding Supplies</b>. Press <b>+</b> in the chat to start a fresh conversation.</li>
+  <li><b>Dry-run every prompt once</b>. The first request after idle is slow. Cut waits in the edit; never talk over a spinner.</li>
+  <li>For clip H: pick one <b>large, real EPC contractor</b> from your search results. Dry-run its research card first. Do not use invented demo clients for web research.</li>
+  <li>Voice clip: Chrome speech recognition may fail. Plan to <b>paste</b> the transcript, and say "the transcript is captured".</li>
+  <li>Your account must not hit its AI request cap (judges get 40 each). Keep yours high.</li>
+  <li>Open tabs in this order: Google Maps, the app, GitHub README. Switch tabs; never hunt for pages on camera.</li>
+</ul>
+
+<div class="pb"></div>
+<h2>The shot list</h2>
+<table>
+<tr><th>Clip</th><th>DO (page and actions)</th><th>SAY (speak this)</th></tr>
+
+<tr><td class="n">A<br><span class="tm">0:00<br>to 0:12</span></td>
+<td class="do"><span class="tag do-t">DO</span> Show a plain Google Maps tab. Cut to the app: <b>Prospecting</b> (<code>/</code>), map visible, organisation selector in the sidebar.</td>
+<td class="say"><span class="tag say-t">SAY</span><p>"When I went out to find customers, nothing told me what was around me: which businesses are nearby, what they do, and who is worth a visit. So I built Finding with Nemo."</p><div class="win"><span class="tag win-t">WHY IT WINS</span> A real problem, stated in one breath.</div></td></tr>
+
+<tr><td class="n">B<br><span class="tm">0:12<br>to 0:24</span></td>
+<td class="do"><span class="tag do-t">DO</span> <b>Prospecting</b>. Pick a focus-area chip, set radius 25 km. Chat (Ask AI button): <code>Find software and IT companies hiring in my selected area.</code> Hold on the pins and result list.</td>
+<td class="say"><span class="tag say-t">SAY</span><p>"It works for a job seeker. Pick an area, ask for software and IT companies, and you get a map of employers and their details."</p><div class="win"><span class="tag win-t">WHY IT WINS</span> One engine, many users.</div></td></tr>
+
+<tr><td class="n">C<br><span class="tm">0:24<br>to 0:34</span></td>
+<td class="do"><span class="tag do-t">DO</span> Same page. Chat: <code>Find steel plate and welding consumables suppliers in my selected area.</code> Open one result card.</td>
+<td class="say"><span class="tag say-t">SAY</span><p>"And for procurement: ask for steel and welding consumables suppliers, and the nearby ones appear on the map."</p><div class="win"><span class="tag win-t">WHY IT WINS</span> Shortlist suppliers in minutes, not days.</div></td></tr>
+
+<tr><td class="n">D<br><span class="tm">0:34<br>to 0:40</span></td>
+<td class="do"><span class="tag do-t">DO</span> Select <b>Steel Arc Welding Supplies</b> in the sidebar selector. Left panel: click chip <b>Ras Al Khaimah</b>, radius <b>25 km</b>. Do not type yet.</td>
+<td class="say"><span class="tag say-t">SAY</span><p>"Now the main case: a sales team selling welding supplies to fabricators and EPC contractors. I select my area."</p><div class="win"><span class="tag win-t">WHY IT WINS</span> The map opens on your own city automatically.</div></td></tr>
+
+<tr><td class="n">E<br><span class="tm">0:40<br>to 0:58</span></td>
+<td class="do"><span class="tag do-t">DO</span> Chat: <code>Find welding fabrication companies and EPC contractors in my selected area.</code> (Backup that works: in "2. Search Businesses" add keywords <code>EPC contractor</code> and <code>steel fabrication</code>, press Search; about 67 results.) Hold on the pins.</td>
+<td class="say"><span class="tag say-t">SAY</span><p>"The agent sees my screen, so I never describe the area. It searches Google Maps for my own tags inside that circle."</p><div class="win"><span class="tag win-t">WHY IT WINS</span> Screen-aware agent; real, current businesses.</div></td></tr>
+
+<tr><td class="n">F<br><span class="tm">0:58<br>to 1:12</span></td>
+<td class="do"><span class="tag do-t">DO</span> Chat: <code>Save these.</code> An approval card appears. Read its text, then press <b>Approve</b>.</td>
+<td class="say"><span class="tag say-t">SAY</span><p>"It proposes what to save, and nothing changes until I approve. It also remembers new tags for next time."</p><div class="win"><span class="tag win-t">WHY IT WINS</span> Human stays in control; the app learns your tags.</div></td></tr>
+
+<tr><td class="n">G<br><span class="tm">1:12<br>to 1:22</span></td>
+<td class="do"><span class="tag do-t">DO</span> Chat: <code>What do we know about Qasr Meridian EPC?</code> Wait for the answer with source badges; the memory dots light up if you are on the Memory page.</td>
+<td class="say"><span class="tag say-t">SAY</span><p>"I ask what we know about a client. The answer cites its sources: a meeting note, a voice note, a project."</p><div class="win"><span class="tag win-t">WHY IT WINS</span> Every statement points back to evidence.</div></td></tr>
+
+<tr><td class="n">H<br><span class="tm">1:22<br>to 1:42</span></td>
+<td class="do"><span class="tag do-t">DO</span> Save one <b>real</b> EPC contractor from the results (<b>Save</b>). Open <b>Pipeline</b> (<code>/pipeline</code>), open that client. Press <b>Fetch cited web research</b>. Show the brief with [1] [2], click one numbered source link.</td>
+<td class="say"><span class="tag say-t">SAY</span><p>"Now research. Tavily brings back the live web and Nemotron writes a short brief. Each sentence carries a quote, and our code keeps it only if that exact quote is on the page. So I only see what the page really says."</p><div class="win"><span class="tag win-t">WHY IT WINS</span> Cited research you can trust, in seconds.</div></td></tr>
+
+<tr><td class="n">I<br><span class="tm">1:42<br>to 2:02</span></td>
+<td class="do"><span class="tag do-t">DO</span> Chat on that client: <code>Any recent news about &lt;contractor name&gt; in the UAE? Cite sources.</code> Show the label "Searching the web with Tavily", then the answer and its closing line.</td>
+<td class="say"><span class="tag say-t">SAY</span><p>"I can also ask the agent for recent news. It tells me it is searching with Tavily, and answers with sources."</p><div class="win"><span class="tag win-t">WHY IT WINS</span> Live web research inside the chat.</div></td></tr>
+
+<tr><td class="n">J<br><span class="tm">2:02<br>to 2:18</span></td>
+<td class="do"><span class="tag do-t">DO</span> Chat: <code>Plan a route starting at Al Hamra Mall to my saved clients.</code> The route drawer opens: start point first, stops after. Press <b>Approve</b>.</td>
+<td class="say"><span class="tag say-t">SAY</span><p>"In the field I ask for a route from where I am. The saved clients become the stops."</p><div class="win"><span class="tag win-t">WHY IT WINS</span> Plans the day around your position.</div></td></tr>
+
+<tr><td class="n">K<br><span class="tm">2:18<br>to 2:32</span></td>
+<td class="do"><span class="tag do-t">DO</span> <b>Voice notes</b> (<code>/voice</code>). Pick the client. Record 10 s, then paste the transcript in the box under the audio. <b>Save voice note</b>. Show original, English, ticked facts.</td>
+<td class="say"><span class="tag say-t">SAY</span><p>"After a visit I record a note. It is translated, stored encrypted, and each fact is checked against what was said."</p><div class="win"><span class="tag win-t">WHY IT WINS</span> Nothing a salesperson hears is lost.</div></td></tr>
+
+<tr><td class="n">L<br><span class="tm">2:32<br>to 2:44</span></td>
+<td class="do"><span class="tag do-t">DO</span> <b>Memory</b> (<code>/memory</code>), chat closed first, slowly rotate the glowing 3D view. Open chat, ask: <code>What do we know about Qasr Meridian EPC?</code> Dots light up; click one to show its source quote.</td>
+<td class="say"><span class="tag say-t">SAY</span><p>"Everything the team learns becomes a memory, one dot each. I ask a question and the dots the agent used light up, with links to the source."</p><div class="win"><span class="tag win-t">WHY IT WINS</span> Team knowledge that does not walk out the door.</div></td></tr>
+
+<tr><td class="n">M<br><span class="tm">2:44<br>to 2:55</span></td>
+<td class="do"><span class="tag do-t">DO</span> GitHub README architecture picture, then the live URL in the address bar.</td>
+<td class="say"><span class="tag say-t">SAY</span><p>"Three NVIDIA Nemotron models run on Nebius Token Factory. Ultra does careful reasoning and fact extraction. Super runs the agent and writes the research briefs. Nano does the fast checks. Embeddings power the memory, and Tavily brings in the live web so every claim points to a real page. Open source, Apache 2.0. Finding with Nemo."</p><div class="win"><span class="tag win-t">WHY IT WINS</span> Clear use of every required technology.</div></td></tr>
+</table>
+
+<div class="pb"></div>
+<h2>If things go wrong</h2>
+<table>
+<tr><th style="width:55mm">Problem</th><th>Fix</th></tr>
+<tr><td>Agent takes 30 to 60 seconds</td><td>Normal. Cut the wait in the edit. Never narrate over a spinner.</td></tr>
+<tr><td>Search shows few or wrong results</td><td>Use the keyword boxes (<code>EPC contractor</code>, <code>steel fabrication</code>) in "2. Search Businesses" and press Search.</td></tr>
+<tr><td>Research card finds little</td><td>Use a bigger, well-known company, not a small local shop.</td></tr>
+<tr><td>Chat shows a database error after switching organisation</td><td>Press <b>+</b> for a new chat, or redeploy the latest image.</td></tr>
+<tr><td>Voice recognition fails</td><td>Paste the transcript. Do not say it was transcribed from your voice.</td></tr>
+<tr><td>"Request limit reached"</td><td>Use your unlimited account, not the judge account.</td></tr>
+<tr><td>Over 3:00</td><td>Cut clips in this order: C, then K, then G. Never cut E, F, H or I.</td></tr>
+</table>
+
+<h2>Do not say</h2>
+<ul>
+  <li>Anything about "watchers" or "predictions": they were removed from the app.</li>
+  <li>Speed or token numbers: the earlier measurements were affected by a bug and are not reliable.</li>
+  <li>"Blind test" for the 30 of 30 result. It is a regression score (those questions also helped us find bugs). Say "passed".</li>
+  <li>"Runs on a Nebius endpoint". The models run on Nebius Token Factory; the app is hosted on Render.</li>
+</ul>
+
+<h2>Reference screens (from the live app)</h2>
+<div class="two">
+  <div><img class="s" src="../screenshots/epc-1-map-67-results.jpg"><div class="small">Clip E: 67 results around Ras Al Khaimah</div></div>
+  <div><img class="s" src="../screenshots/epc-3-agent-cited-answer.jpg"><div class="small">Clips G and L: cited answer, memory dots lit</div></div>
+</div>
+<div class="two" style="margin-top:4mm">
+  <div><img class="s" src="../screenshots/epc-2-pipeline-18-clients.jpg"><div class="small">Pipeline with 18 clients</div></div>
+  <div><img class="s" src="../screenshots/epc-4-route-from-start-point.jpg"><div class="small">Clip J: route from a start point</div></div>
+</div>
+
+<h2>After recording</h2>
+<ul class="chk">
+  <li>Edit to under <b>3:00</b>. Add small text badges naming the model per clip (Ultra, Super, Nano, Tavily).</li>
+  <li>Upload to YouTube as <b>Public</b>. First line of the description: the GitHub link, then the live URL, then one paragraph naming the models by role.</li>
+  <li>Title: <i>Finding with Nemo: instant research and an agent for the field, on Nebius + NVIDIA Nemotron</i></li>
+</ul>
+</body></html>
