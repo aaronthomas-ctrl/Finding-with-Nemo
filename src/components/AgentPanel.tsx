@@ -79,7 +79,20 @@ export function AgentPanel({ bounds, customPath, searchedPlace, radiusKm, result
     try { id ? sessionStorage.setItem('agent_thread', id) : sessionStorage.removeItem('agent_thread'); } catch { /* ignore */ }
     if (!id) { setMessages([WELCOME]); return; }
     const { data } = await supabase.from('chat_messages').select('role,content,metadata').eq('thread_id', id).in('role', ['user', 'assistant']).order('created_at');
-    const msgs: Msg[] = (data ?? []).map((m: any) => ({ role: m.role, text: m.content, tools: [], proposals: [] }));
+    // Pending approvals live in the database; rebuild their cards so a reload does not lose them.
+    const ids = [...new Set((data ?? []).flatMap((m: any) => (m.metadata?.proposals ?? []).map((p: any) => p.id)).filter(Boolean))] as string[];
+    const byId = new Map<string, any>();
+    if (ids.length) {
+      const { data: ap } = await supabase.from('approvals').select('id,tool,status,proposal').in('id', ids);
+      for (const a of ap ?? []) byId.set(a.id, a);
+    }
+    const msgs: Msg[] = (data ?? []).map((m: any) => ({
+      role: m.role, text: m.content, tools: [],
+      proposals: (m.metadata?.proposals ?? []).map((p: any) => byId.get(p.id)).filter(Boolean).map((a: any) => ({
+        id: a.id, tool: a.tool, summary: a.proposal?.summary ?? '', payload: a.proposal?.payload, bulk: !!a.proposal?.bulk,
+        state: a.status === 'approved' ? 'approved' : a.status === 'rejected' ? 'rejected' : 'pending',
+      } as Proposal)),
+    }));
     setMessages(msgs.length ? msgs : [WELCOME]);
   }, []);
   useEffect(() => { if (isOpen && threadId && messages.length === 1 && messages[0] === WELCOME) openThread(threadId); }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -131,7 +144,7 @@ export function AgentPanel({ bounds, customPath, searchedPlace, radiusKm, result
           else if (ev.type === 'memories') { patchLast((m) => ({ ...m, memories: ev.items })); announceMemories(ev.items.map((i: MemItem) => i.id)); }
           else if (ev.type === 'replace') patchLast((m) => ({ ...m, text: ev.text }));
           else if (ev.type === 'error') patchLast((m) => ({ ...m, text: m.text + `\n\nError: ${ev.message}` }));
-          else if (ev.type === 'done') { setThreadId(ev.threadId); try { sessionStorage.setItem('agent_thread', ev.threadId); } catch { /* ignore */ } }
+          else if (ev.type === 'done') { setThreadId(ev.threadId); try { sessionStorage.setItem('agent_thread', ev.threadId); } catch { /* ignore */ } onRefreshDB?.(); }
         }
       }
     } catch (e: any) {

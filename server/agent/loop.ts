@@ -46,10 +46,15 @@ export async function runAgent(req: AuthedRequest, body: Body, emit: (e: AgentEv
   for (const m of [...(past ?? [])].reverse()) for (const e of ((m as any).metadata?.entities ?? []) as Entity[]) state.entities.set(e.id, e);
 
   // What is on the user's screen. Results shown there become saveable as s1, s2, ... without searching again.
-  (ui.results ?? []).slice(0, 40).forEach((r, i) => state.results.set(`s${i + 1}`, {
-    id: `s${i + 1}`, placeId: r.placeId, name: r.name, address: r.address ?? '', lat: r.lat, lng: r.lng, category: r.category ?? '',
-    website: r.website ?? '', phone: r.phone ?? '', googleMapsUri: r.googleMapsUri ?? '', region: r.region ?? '', alreadySaved: false,
-  }));
+  // The agent's earlier replies call the same list r1, r2 ..., so both names point at the same business.
+  (ui.results ?? []).slice(0, 40).forEach((r, i) => {
+    const rec = {
+      id: `s${i + 1}`, placeId: r.placeId, name: r.name, address: r.address ?? '', lat: r.lat, lng: r.lng, category: r.category ?? '',
+      website: r.website ?? '', phone: r.phone ?? '', googleMapsUri: r.googleMapsUri ?? '', region: r.region ?? '', alreadySaved: false,
+    };
+    state.results.set(`s${i + 1}`, rec);
+    state.results.set(`r${i + 1}`, rec);
+  });
   let selectedClient: { id: string; name: string } | null = null;
   if (ui.selected) {
     const sel = ui.selected;
