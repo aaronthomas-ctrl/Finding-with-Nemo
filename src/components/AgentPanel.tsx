@@ -40,7 +40,7 @@ const WELCOME: Msg = { role: 'assistant', text: "Hi! Tell me who you want to fin
 
 const TOOL_LABEL: Record<string, string> = {
   search_places: 'Searching the map', draw_search_area: 'Drawing the area', suggest_search_tags: 'Working out tags',
-  plan_route: 'Planning the route', research_company: 'Researching on the web', find_nearby_saved_clients: 'Checking nearby clients',
+  plan_route: 'Planning the route', research_company: 'Searching the web with Tavily', check_claim: 'Fact-checking with Tavily', extract_projects: 'Finding projects with Tavily', find_nearby_saved_clients: 'Checking nearby clients',
   whats_due_today: 'Checking what is due', get_client: 'Reading the client', auto_tag_batch: 'Reading websites',
 };
 

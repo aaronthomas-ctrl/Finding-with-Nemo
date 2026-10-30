@@ -32,7 +32,7 @@ for (const message of messages) {
     else if (e.type === 'done') { threadId = e.threadId; if (!threads.includes(e.threadId)) threads.push(e.threadId); }
     else if (e.type === 'error') log(`ERROR: ${e.message}`);
   }, new AbortController().signal);
-  console.log('REPLY: ' + reply.trim().slice(0, 700));
+  console.log('REPLY: ' + reply.trim().slice(-500));
 }
 
 for (const t of threads) {
