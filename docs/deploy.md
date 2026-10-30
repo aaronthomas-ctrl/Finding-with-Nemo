@@ -76,8 +76,8 @@ nebius ai endpoint create \
   --auth none \
   --env NODE_ENV=production \
   --env MODEL_ULTRA=nvidia/Nemotron-3-Ultra-550b-a55b \
-  --env MODEL_SUPER=nvidia/nemotron-3-super-120b-a12b \
-  --env MODEL_NANO=nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B \
+  --env MODEL_SUPER=nvidia/Nemotron-3.5-Super-VL \
+  --env MODEL_NANO=nvidia/Nemotron-3_5-Lightning \
   --env MODEL_EMBED=Qwen/Qwen3-Embedding-8B \
   --env EMBED_DIMENSIONS=1024 \
   --env NEBIUS_BASE_URL=https://api.tokenfactory.nebius.com/v1 \

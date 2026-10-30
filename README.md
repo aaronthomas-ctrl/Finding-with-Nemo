@@ -46,8 +46,8 @@ browser or the server container.
 | Role | Model on Token Factory | Used for |
 | --- | --- | --- |
 | Reasoning | `nvidia/Nemotron-3-Ultra-550b-a55b` | Profile pack, fact extraction with quotes, change summaries, predictions, claim checks, project extraction |
-| Agent loop | `nvidia/nemotron-3-super-120b-a12b` (thinking off) | Tool-calling chat, up to 8 steps, streamed; translation of voice notes |
-| Fast and parallel | `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B` | Website tagging, route stop selection, watcher change checks, reply verifier |
+| Agent loop | `nvidia/Nemotron-3.5-Super-VL` (thinking off) | Tool-calling chat, up to 8 steps, streamed; translation of voice notes |
+| Fast and parallel | `nvidia/Nemotron-3_5-Lightning` | Website tagging, route stop selection, watcher change checks, reply verifier |
 | Memory vectors | `Qwen/Qwen3-Embedding-8B` at 1024 dimensions | Multilingual embeddings (this is not a Nemotron model: Token Factory offered no Nemotron embedding model) |
 | Speech-to-text | **Not on Token Factory** | Pluggable NVIDIA NIM or any OpenAI-compatible ASR; falls back to the browser's transcript |
 | Safety model | **Not on Token Factory** | Not used. Screening is pattern rules plus fencing plus write gates (below) |

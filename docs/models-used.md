@@ -5,8 +5,8 @@ Taken from the code (`role:` in `server/`), not from memory. Names come from env
 | Model | Role | Why this one |
 | --- | --- | --- |
 | **NVIDIA Nemotron 3 Ultra** (`nvidia/Nemotron-3-Ultra-550b-a55b`) | Careful reasoning and fact extraction | Largest model, used where a wrong answer costs trust |
-| **NVIDIA Nemotron 3 Super** (`nvidia/nemotron-3-super-120b-a12b`) | The agent and writing | Good tool calling at a speed a chat can use |
-| **NVIDIA Nemotron 3 Nano** (`nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`) | Fast, cheap checks and picks | Small jobs that run many times |
+| **NVIDIA Nemotron 3.5 Super-VL** (`nvidia/Nemotron-3.5-Super-VL`, replaces Nemotron 3 Super, which Nebius is retiring) | The agent and writing | Good tool calling at a speed a chat can use |
+| **NVIDIA Nemotron 3.5 Lightning** (`nvidia/Nemotron-3_5-Lightning`, replaces Nemotron 3 Nano, which Nebius is retiring) | Fast, cheap checks and picks | Small jobs that run many times |
 | **Qwen3-Embedding-8B** (1024 dims) | Memory search | Token Factory has no NVIDIA embedding model |
 
 Everything runs through one OpenAI-compatible API on **Nebius Token Factory**.

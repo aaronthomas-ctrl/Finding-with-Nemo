@@ -33,9 +33,19 @@ function api(): OpenAI {
   return client;
 }
 
+/** Models the provider has announced as obsolete may disappear. If a configured model is gone, use its successor. */
+const FALLBACK: Record<ModelRole, string> = {
+  ultra: process.env.MODEL_ULTRA_FALLBACK || 'nvidia/Nemotron-3.5-Super-VL',
+  super: process.env.MODEL_SUPER_FALLBACK || 'nvidia/Nemotron-3.5-Super-VL',
+  nano: process.env.MODEL_NANO_FALLBACK || 'nvidia/Nemotron-3_5-Lightning',
+};
+const retired = new Set<ModelRole>();
+const isGone = (e: any) => e?.status === 404 || e?.status === 410 || /model.*(not found|does not exist|deprecat|retired|obsolete|unavailable)/i.test(String(e?.message ?? ''));
+const modelFor = (role: ModelRole) => (retired.has(role) ? FALLBACK[role] : config.models[role]);
+
 function body(opts: ChatOptions) {
   return {
-    model: config.models[opts.role],
+    model: modelFor(opts.role),
     messages: opts.messages,
     tools: opts.tools?.length ? opts.tools : undefined,
     max_tokens: opts.maxTokens ?? 2048,
@@ -47,7 +57,15 @@ function body(opts: ChatOptions) {
 }
 
 export async function chat(opts: ChatOptions): Promise<ChatCompletion> {
-  const res = (await api().chat.completions.create(body(opts), { signal: opts.signal })) as ChatCompletion;
+  let res: ChatCompletion;
+  try {
+    res = (await api().chat.completions.create(body(opts), { signal: opts.signal })) as ChatCompletion;
+  } catch (e) {
+    if (!isGone(e) || retired.has(opts.role) || FALLBACK[opts.role] === config.models[opts.role]) throw e;
+    console.warn(`[llm] ${config.models[opts.role]} is not available; switching ${opts.role} to ${FALLBACK[opts.role]}`);
+    retired.add(opts.role);
+    res = (await api().chat.completions.create(body(opts), { signal: opts.signal })) as ChatCompletion;
+  }
   if (res.usage && opts.onUsage) {
     await opts.onUsage({ role: opts.role, tokensIn: res.usage.prompt_tokens, tokensOut: res.usage.completion_tokens });
   }
@@ -75,10 +93,19 @@ export async function chatJson<T = any>(opts: Omit<ChatOptions, 'json'>): Promis
 
 /** Streaming completion. Yields text deltas and tool-call fragments; reports usage at the end. */
 export async function* chatStream(opts: ChatOptions) {
-  const stream = await api().chat.completions.create(
+  const open = () => api().chat.completions.create(
     { ...body(opts), stream: true, stream_options: { include_usage: true } },
     { signal: opts.signal },
   );
+  let stream;
+  try {
+    stream = await open();
+  } catch (e) {
+    if (!isGone(e) || retired.has(opts.role) || FALLBACK[opts.role] === config.models[opts.role]) throw e;
+    console.warn(`[llm] ${config.models[opts.role]} is not available; switching ${opts.role} to ${FALLBACK[opts.role]}`);
+    retired.add(opts.role);
+    stream = await open();
+  }
   // Token Factory may attach a running total to every chunk, not just the last. Keep the latest and report it once,
   // otherwise a 7-chunk answer is billed as seven answers and the daily cap fills up for nothing.
   let last: { prompt_tokens: number; completion_tokens: number } | null = null;
