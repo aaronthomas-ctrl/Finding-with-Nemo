@@ -46,7 +46,7 @@ Everything runs through one OpenAI-compatible API on **Nebius Token Factory**.
 
 Other non-model services: Google Maps (places, geocoding, directions) and Supabase (database, auth).
 
-## Honest limits to state if asked
+## Honest limits
 - Speech recognition uses the browser's own recognition, not an NVIDIA speech model (Token Factory has no audio endpoint).
 - Embeddings are Qwen3-Embedding-8B because Token Factory offers no NVIDIA embedding model.
 - The agent loop uses Super rather than Ultra to keep chat turns usable.
