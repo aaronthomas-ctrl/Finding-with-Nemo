@@ -91,7 +91,7 @@ export function AgentPanel({ bounds, customPath, searchedPlace, radiusKm, result
         body: JSON.stringify({
           message: text, threadId,
           ui: {
-            bounds: bounds ? { low: { lat: bounds.getSouthWest().lat(), lng: bounds.getSouthWest().lng() }, high: { lat: bounds.getNorthEast().lat(), lng: bounds.getNorthEast().lng() } } : null,
+            bounds: bounds?.getSouthWest() && bounds?.getNorthEast() ? { low: { lat: bounds.getSouthWest().lat(), lng: bounds.getSouthWest().lng() }, high: { lat: bounds.getNorthEast().lat(), lng: bounds.getNorthEast().lng() } } : null,
             polygon: customPath ?? null, place: searchedPlace ?? null, radiusKm: searchedPlace ? radiusKm ?? null : null,
             tags: activeTags ?? [],
             results: (results ?? []).slice(0, 40).map((c) => ({

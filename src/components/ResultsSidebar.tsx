@@ -554,10 +554,10 @@ export function ResultsSidebar({
                 </div>
               </div>
 
-              {bounds ? (
+              {bounds?.getSouthWest() && bounds?.getNorthEast() ? (
                 <div className="text-[10px] text-slate-400 bg-black/40 p-2 rounded border border-slate-800 font-mono">
-                  SW: {bounds.getSouthWest().lat().toFixed(4)}, {bounds.getSouthWest().lng().toFixed(4)}<br/>
-                  NE: {bounds.getNorthEast().lat().toFixed(4)}, {bounds.getNorthEast().lng().toFixed(4)}
+                  SW: {bounds.getSouthWest()!.lat().toFixed(4)}, {bounds.getSouthWest()!.lng().toFixed(4)}<br/>
+                  NE: {bounds.getNorthEast()!.lat().toFixed(4)}, {bounds.getNorthEast()!.lng().toFixed(4)}
                 </div>
               ) : (
                 <p className="text-xs text-slate-500">
