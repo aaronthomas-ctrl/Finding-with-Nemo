@@ -5,14 +5,6 @@ of Nemotron models builds your tags, finds prospects on a map, plans your visits
 any language, and watches for change. Every fact it states can be traced to a quote, and nothing it proposes changes your
 data until you approve it.
 
-Built for the **Nebius x NVIDIA Global AI Hackathon**. Hosted demo, judge login and video are listed in [docs/devpost.md](docs/devpost.md).
-
-> **Existing project declaration.** This started from an earlier prototype, "Client Pipeline & Prospecting CRM": a single-user,
-> browser-only map-and-pipeline app hard-coded for welding suppliers in the UAE, with no login and Gemini for AI. The
-> state before the hackathon is the git tag [`pre-hackathon`](https://github.com/aaronthomas-ctrl/Finding-with-Nemo/tree/pre-hackathon). Everything below, from the
-> multi-tenant database, login, onboarding and roles to the agent, memory, voice, watchers and safety work, was built during the
-> hackathon. Compare with `git diff pre-hackathon..main`. The welding, fabricator and UAE assumptions were removed
-> (a CI check fails the build if they return); tags, tiers, categories and presets are now data generated per organisation.
 
 ## What it does
 
@@ -104,19 +96,6 @@ counts are not reported: this run's token counts were inflated by a metering bug
 summed them; fixed afterwards) and its latency was dominated by a slow simulated database client. Measure both on the deployed app. Per-question report: [docs/agent-eval-sim.md](docs/agent-eval-sim.md).
 <!-- eval:end -->
 
-## Data and compliance
-
-- **Multi-tenant isolation.** Every row carries `org_id`; policies check membership. A user in another org sees nothing, cannot insert into it,
-  and cannot make themselves owner. Child rows reference their parent by `(id, org_id)`, so a row can never point at another org's data.
-- **Encryption.** Disk and transport are encrypted by Supabase; phone numbers, emails, contacts and voice transcripts are additionally AES-GCM encrypted in
-  server code with a key held only as an environment secret.
-- **Google Maps terms.** Search results stay in memory and are never written to the database. A saved client stores the `place_id` and the fields the
-  user confirms; coordinates come from the Geocoding API (which may be kept) and carry `geo_source`. Any coordinates that came from Places carry a
-  `places_fetched_at` date and a daily database cron clears them after 30 days.
-- **LinkedIn and Instagram** are reached only through Tavily, public pages only. No scraping and no logins.
-- **Demo data is synthetic.** Three invented organisations; no real client data.
-- **Notifications are in-app only.** No email, SMS or push.
-
 ## Run it
 
 ```bash
@@ -127,27 +106,6 @@ npm run dev                          # http://localhost:3000
 npm run seed -- --email you@example.com --activate   # three synthetic orgs, attached to an existing account
 ```
 
-| Command | What it does |
-| --- | --- |
-| `npm run lint` | Type check, plus the guard that fails if industry- or country-specific words appear in `src/` or `server/` |
-| `npm run test:patterns` | Unit test of the injection screening patterns |
-| `npm run eval:injection` | The 13-attack suite with a defences-off control |
-| `npm run eval:agent` | The 30-question agent evaluation (needs a seeded account) |
-| `npm run build` / `npm start` | Production build and server |
-| `docker build` | See [docs/deploy.md](docs/deploy.md) |
-
-### Environment variables
-
-| Variable | Purpose |
-| --- | --- |
-| `NEBIUS_API_KEY`, `NEBIUS_BASE_URL` | Token Factory (OpenAI-compatible) |
-| `MODEL_ULTRA`, `MODEL_SUPER`, `MODEL_NANO`, `MODEL_EMBED`, `EMBED_DIMENSIONS` | Model roles. Names live in config, never in code |
-| `SUPABASE_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | Supabase. Only the publishable key reaches the browser |
-| `DATABASE_URL`, `PGSSLROOTCERT` | Scripts only (schema, seed). Not needed by the app server |
-| `TAVILY_API_KEY` | Web research |
-| `GOOGLE_MAPS_PLATFORM_KEY` | Places, Geocoding, Directions (server) and the map (browser build arg, referrer-restricted) |
-| `PII_ENCRYPTION_KEY` | 32 random bytes, base64 |
-| `ASR_BASE_URL`, `ASR_API_KEY`, `MODEL_ASR` | Optional speech-to-text |
 
 ### Layout
 
