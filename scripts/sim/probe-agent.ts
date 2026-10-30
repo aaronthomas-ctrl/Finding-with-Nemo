@@ -9,10 +9,10 @@ import { ORG_NAME } from '../eval/questions';
 const [orgKey, ...messages] = process.argv.slice(2);
 const ui = process.env.UI ? JSON.parse(process.env.UI) : {};
 const a = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { ca: fs.readFileSync(process.env.PGSSLROOTCERT!, 'utf8') } }); await a.connect();
-const uid = (await a.query("select id from auth.users where email='aaronthomashermit@gmail.com'")).rows[0].id;
+const uid = (await a.query(`select id from auth.users where email='${process.env.PROBE_EMAIL || 'aaronthomashermit@gmail.com'}'`)).rows[0].id;
 const orgId = orgKey === 'MINE'
   ? (await a.query("select default_org_id id from public.profiles where id=$1", [uid])).rows[0].id
-  : (await a.query('select id from public.organizations where name=$1', [(ORG_NAME as any)[orgKey]])).rows[0].id;
+  : process.env.ORG_ID ?? (await a.query('select id from public.organizations where name=$1', [(ORG_NAME as any)[orgKey]])).rows[0].id;
 await a.end();
 const sb = simClient(uid);
 const threads: string[] = [];
