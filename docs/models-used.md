@@ -46,9 +46,6 @@ Everything runs through one OpenAI-compatible API on **Nebius Token Factory**.
 
 Other non-model services: Google Maps (places, geocoding, directions) and Supabase (database, auth).
 
-## What to say in the video (one breath, scene 8 or the opening)
-"Three NVIDIA Nemotron models run on Nebius Token Factory, each with a job. **Ultra** does the careful reasoning: onboarding and extracting facts that must be quote-checked. **Super** runs the agent and writes the answers and research briefs. **Nano** does the fast checks: picking route stops, suggesting tags, and flagging unsupported sentences. Embeddings on Token Factory power the memory. And **Tavily** brings in the live web, so every claim can point to a real page."
-
 ## Honest limits to state if asked
 - Speech recognition uses the browser's own recognition, not an NVIDIA speech model (Token Factory has no audio endpoint).
 - Embeddings are Qwen3-Embedding-8B because Token Factory offers no NVIDIA embedding model.

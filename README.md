@@ -117,7 +117,7 @@ src/                 React app: map, pipeline, chat, memory 3D view, voice, watc
 supabase/schema.sql  42 tables, 140 row level security policies, functions, storage, realtime
 scripts/             seed, evaluations, schema applier, icon and test-page generators
 public/injection-tests/   the 13 attack pages
-docs/                evaluation reports, deploy guide, demo script, Devpost draft
+docs/                evaluation reports, model-to-feature list, deploy guide
 ```
 
 ## Known limits
