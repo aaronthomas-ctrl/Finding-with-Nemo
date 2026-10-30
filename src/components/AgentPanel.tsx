@@ -45,7 +45,7 @@ const TOOL_LABEL: Record<string, string> = {
 };
 
 export function AgentPanel({ bounds, customPath, searchedPlace, radiusKm, results, activeTags, selectedCompany, onUiAction, onRefreshDB, isHidden = false }: AgentPanelProps) {
-  const { canWrite } = useAuth();
+  const { canWrite, activeOrg } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([WELCOME]);
@@ -57,6 +57,15 @@ export function AgentPanel({ bounds, customPath, searchedPlace, radiusKm, result
   const endRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+  // A chat thread belongs to one organisation. Switching organisations starts a fresh conversation.
+  const orgKey = activeOrg?.org_id ?? null;
+  const lastOrg = useRef(orgKey);
+  useEffect(() => {
+    if (lastOrg.current === orgKey) return;
+    lastOrg.current = orgKey;
+    setThreadId(null); setMessages([WELCOME]); setShowThreads(false);
+    try { sessionStorage.removeItem('agent_thread'); } catch { /* ignore */ }
+  }, [orgKey]);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isOpen]);
 
   const loadThreads = useCallback(async () => {
