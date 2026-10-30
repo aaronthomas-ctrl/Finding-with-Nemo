@@ -17,11 +17,13 @@ import { UMAP } from 'umap-js';
 import { embed } from '../server/llm';
 import { seal } from '../server/crypto';
 import { verifyQuote } from '../server/evidence';
-import { ORGS, type SeedOrg } from './seed/data';
+import { ORGS as ALL_ORGS, type SeedOrg } from './seed/data';
 
 const args = process.argv.slice(2);
 const flag = (n: string) => args.includes(`--${n}`);
 const opt = (n: string) => { const i = args.indexOf(`--${n}`); return i >= 0 ? args[i + 1] : undefined; };
+// --only <id suffix> seeds just one organisation and leaves the others (and their members) untouched.
+const ORGS = opt('only') ? ALL_ORGS.filter((o) => o.id.endsWith(opt('only')!)) : ALL_ORGS;
 
 const db = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: process.env.PGSSLROOTCERT ? { ca: fs.readFileSync(process.env.PGSSLROOTCERT, 'utf8') } : true });
 const q = async (sql: string, params: any[] = []) => (await db.query(sql, params)).rows;
@@ -36,11 +38,13 @@ const TOPIC: Record<string, { ask: string; note: string }> = {
   '5eed0000-0000-4000-8000-00000000000a': { ask: 'a quote for weekly oat milk deliveries', note: 'tasted the new barista oat milk and liked the foam' },
   '5eed0000-0000-4000-8000-00000000000b': { ask: 'a roof and energy-use assessment', note: 'shared twelve months of electricity bills' },
   '5eed0000-0000-4000-8000-00000000000c': { ask: 'a digital scanner demo', note: 'asked about training for the nursing team' },
+  '5eed0000-0000-4000-8000-00000000000d': { ask: 'a monthly electrode quote', note: 'asked about next-day delivery to the site yard' },
 };
 const RUMOUR: Record<string, [string, string]> = {
   '5eed0000-0000-4000-8000-00000000000a': ['Dune Coffee Co is rumoured to be switching to a competing supplier group.', 'a forum post'],
   '5eed0000-0000-4000-8000-00000000000b': ['A competitor is said to be offering free battery upgrades to school districts.', 'an industry chat thread'],
   '5eed0000-0000-4000-8000-00000000000c': ['Stockport Family Dentistry may be changing ownership next year.', 'a trade newsletter comment'],
+  '5eed0000-0000-4000-8000-00000000000d': ['Desert Line Welding Works is rumoured to be closing its yard next year.', 'a trade forum post'],
 };
 
 interface Mem { content: string; kind: keyof typeof COLORS; verified: boolean; factId?: string; sourceId?: string; clientId?: string; projectId?: string }

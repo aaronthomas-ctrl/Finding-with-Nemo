@@ -21,5 +21,6 @@ export const config = {
     get anonKey() { return need('VITE_SUPABASE_ANON_KEY'); },
   },
   get tavilyKey() { return need('TAVILY_API_KEY'); },
-  get googleKey() { return need('GOOGLE_MAPS_PLATFORM_KEY'); },
+  // Server calls (Places, Geocoding, Directions) send no website address, so they need a key without a referrer restriction.
+  get googleKey() { return process.env.GOOGLE_MAPS_SERVER_KEY || need('GOOGLE_MAPS_PLATFORM_KEY'); },
 };
