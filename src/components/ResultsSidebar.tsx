@@ -83,6 +83,10 @@ export function ResultsSidebar({
   const presetRegions = usePresetRegions();
   const SEARCH_TAGS = useSearchSuggestions();
   const [showSavedZonesList, setShowSavedZonesList] = useState(false);
+  const [areaOpen, setAreaOpen] = useState(true);
+  const [searchOpen, setSearchOpen] = useState(true);
+  const hasResults = companies.length > 0;
+  useEffect(() => { if (hasResults) { setAreaOpen(false); setSearchOpen(false); } }, [hasResults]);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const tagsRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -373,7 +377,7 @@ export function ResultsSidebar({
 
         <div className="bg-[#1a1d23] p-4 rounded-xl shadow-sm border border-slate-800 mb-4">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-slate-300">1. Search Area & Region</h3>
+            <button type="button" onClick={() => setAreaOpen((o) => !o)} className="flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-white" aria-expanded={areaOpen}>1. Search Area & Region{areaOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}{!areaOpen && searchedPlace && <span className="text-[11px] text-cyan-400 font-normal truncate max-w-[140px]">{searchedPlace.name}</span>}</button>
             {searchedPlace && (
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-semibold">
                 Region Focus
@@ -381,6 +385,7 @@ export function ResultsSidebar({
             )}
           </div>
 
+          <div className={areaOpen ? '' : 'hidden'}>
           {/* Active Searched Place & Regional Saved Clients Summary */}
           {searchedPlace ? (
             <div className="space-y-3">
@@ -566,11 +571,12 @@ export function ResultsSidebar({
               )}
             </div>
           )}
+          </div>
         </div>
 
         <div className="bg-[#1a1d23] p-4 rounded-xl shadow-sm border border-slate-800">
-          <h3 className="text-sm font-medium text-slate-300 mb-2">2. Search Businesses</h3>
-          <div className="flex flex-col gap-2 relative">
+          <button type="button" onClick={() => setSearchOpen((o) => !o)} className="flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-white mb-2" aria-expanded={searchOpen}>2. Search Businesses{searchOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}{!searchOpen && activeSearchTags.length > 0 && <span className="text-[11px] text-blue-300 font-normal">{activeSearchTags.length} keyword{activeSearchTags.length === 1 ? '' : 's'}</span>}</button>
+          <div className={`${searchOpen ? 'flex' : 'hidden'} flex-col gap-2 relative`}>
             {activeSearchTags.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-1">
                 {activeSearchTags.map(tag => (

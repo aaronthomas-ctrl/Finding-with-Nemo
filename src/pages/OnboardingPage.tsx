@@ -15,6 +15,7 @@ interface Pack {
   tier_rules: Array<{ tier: number; label: string; rule: string }>; product_lines: string[];
   presets: Array<{ name: string; lat: number; lng: number; radius_km: number }>; cadence_days: Record<string, number>;
   sourcesUsed: number; notes: string[];
+  playbooks?: { version: number; updated_at: string; source: string; focus: string; search: string; client_research: string; chat_style: string; queries: Array<{ label: string; q: string; domains?: string[] }> } | null;
 }
 
 export function OnboardingPage() {
@@ -24,7 +25,7 @@ export function OnboardingPage() {
   const [err, setErr] = useState<string | null>(null);
   const [sub, setSub] = useState<'create' | 'join'>('create');
   const [f, setF] = useState({ name: '', website: '', country: '', cities: '', code: '' });
-  const [need, setNeed] = useState({ text: '', website: '' });
+  const [need, setNeed] = useState({ text: '', website: '', focus: '' });
   const [pack, setPack] = useState<Pack | null>(null);
 
   if (loading) return <div className="min-h-screen bg-[#0c0e12]" />;
@@ -147,6 +148,9 @@ export function OnboardingPage() {
                 <input className={input} placeholder="City or cities, comma separated" value={f.cities} onChange={(e) => setF({ ...f, cities: e.target.value })} />
               </div>
             )}
+            <label className="block text-xs text-slate-400 mt-4 mb-1">When you research a company or a lead, what should we look for? (optional, but it tunes your agent)</label>
+            <textarea className={`${input} h-20`} value={need.focus} onChange={(e) => setNeed({ ...need, focus: e.target.value })}
+              placeholder={isBusiness ? 'e.g. EPC projects they are working on or have won, recent news and articles, their LinkedIn page and posts, who runs procurement' : 'e.g. careers page, open vacancies, LinkedIn company page, recruitment agencies hiring for them'} />
             {isBusiness && <input className={`${input} mt-3`} placeholder="Website (optional)" value={need.website} onChange={(e) => setNeed({ ...need, website: e.target.value })} />}
             <button className={`${primary} mt-4`} disabled={busy || (need.text.trim().length < 30 && !need.website.trim())} onClick={buildPack}>
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
@@ -177,6 +181,14 @@ export function OnboardingPage() {
               <div className="sm:col-span-2"><div className="text-slate-400 mb-1">Tier rules</div>
                 {pack.tier_rules.map((r) => <div key={r.tier}>Tier {r.tier} ({r.label}): {r.rule}</div>)}</div>
             </div>
+            {pack.playbooks && (
+              <div className="mt-4">
+                <div className="text-xs text-slate-400 mb-1">How your agent will search and research (editable; it keeps improving from your activity)</div>
+                <textarea className={`${input} h-20`} value={pack.playbooks.search} onChange={(e) => setPack({ ...pack, playbooks: { ...pack.playbooks!, search: e.target.value } })} />
+                <textarea className={`${input} h-24 mt-2`} value={pack.playbooks.client_research} onChange={(e) => setPack({ ...pack, playbooks: { ...pack.playbooks!, client_research: e.target.value } })} />
+                <div className="text-[11px] text-slate-500 mt-1">Web searches per company: {pack.playbooks.queries.map((q) => q.label).join(', ') || '-'}</div>
+              </div>
+            )}
             {pack.notes.length > 0 && <p className="text-xs text-amber-400 mt-3">{pack.notes.join(' ')}</p>}
             <div className="flex gap-3 mt-5">
               <button className={primary} disabled={busy} onClick={approve}>{busy && <Loader2 className="w-4 h-4 animate-spin" />}Approve and start</button>

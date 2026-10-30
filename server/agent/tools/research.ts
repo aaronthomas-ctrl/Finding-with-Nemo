@@ -1,4 +1,5 @@
 import { tavilySearch } from '../../tavily';
+import { loadPlaybooks, researchQueries } from '../../playbooks';
 import { ingestText, recall } from '../../memory';
 import { canWrite } from '../../auth';
 import { cleanText, screenWithPatterns } from '../../security/untrusted';
@@ -19,8 +20,15 @@ export const researchCompany: ToolDef = {
   },
   async run(args, ctx) {
     const query = `${String(args.name).slice(0, 120)} ${String(args.question || 'company overview').slice(0, 160)}`;
-    const web = await tavilySearch(ctx.req.sb, ctx.req.orgId, query, { maxResults: 5, answer: false });
-    const pages = web.results.filter((r) => r.content.length > 60);
+    // The organisation's playbook decides what to look for about a company (projects, news, LinkedIn, careers ...).
+    const plan = researchQueries(loadPlaybooks(ctx.org), String(args.name).slice(0, 120), null);
+    const runs = await Promise.all([
+      tavilySearch(ctx.req.sb, ctx.req.orgId, query, { maxResults: 4, answer: false }),
+      ...plan.slice(0, 3).map((p) => tavilySearch(ctx.req.sb, ctx.req.orgId, p.q, { maxResults: 3, answer: false, includeDomains: p.domains }).catch(() => ({ results: [] as any[] }))),
+    ]);
+    const seen = new Set<string>();
+    const web = { results: runs.flatMap((x) => x.results).filter((r: any) => !seen.has(r.url) && seen.add(r.url)).slice(0, 8) };
+    const pages = web.results.filter((r: any) => r.content.length > 60);
     if (pages.some((p) => screenWithPatterns(p.content).suspicious)) ctx.state.tainted = true;
 
     const learned: Array<{ claim: string; verified: boolean; source: string; memory_id?: string }> = [];

@@ -5,6 +5,7 @@ import { canManageRole } from '../auth';
 import { chatJson } from '../llm';
 import { tokenSink, assertWithinQuota, addUsage } from '../usage';
 import { loadOrgContext } from '../org';
+import { draftPlaybooks, sanitizePlaybooks } from '../playbooks';
 import { profilePackPrompt } from '../prompts/profilePack';
 import { verifyQuote } from '../evidence';
 import { fence, screenWithPatterns, cleanText } from '../security/untrusted';
@@ -38,6 +39,7 @@ onboarding.post('/onboarding/profile-pack', async (req, res) => {
   if (!canManageRole(r.role)) return res.status(403).json({ error: 'Only owners, admins and managers can set the profile' });
   const text = cleanText(String(req.body?.text || '')).slice(0, 6000);
   const website = String(req.body?.website || '').trim();
+  const focus = cleanText(String(req.body?.focus || '')).slice(0, 800);
   if (text.length < 30 && !website) return res.status(400).json({ error: 'Write at least a sentence about what you do or need, or add your website, so the research has something real to anchor on.' });
 
   try {
@@ -45,6 +47,7 @@ onboarding.post('/onboarding/profile-pack', async (req, res) => {
     const org = await loadOrgContext(r.sb, r.orgId);
     const sources: Src[] = [];
     if (text) sources.push({ kind: 'user', title: 'Your description', content: text });
+    if (focus) sources.push({ kind: 'user', title: 'What research should look for', content: focus });
 
     const notes: string[] = [];
     if (website) {
@@ -115,7 +118,16 @@ onboarding.post('/onboarding/profile-pack', async (req, res) => {
     const presets = (await Promise.all(presetNames.map((n) => geocodeName(n, org.country).catch(() => null)))).filter(Boolean);
     await addUsage(r.sb, r.orgId, { google: presetNames.length });
 
+    // Playbooks: standing instructions for the agent and research tools, drafted from this profile and the user's research focus.
+    const draftOrg = {
+      ...org, summary: String(pack.summary || ''), lookingFor: org.kind === 'personal' ? text : org.lookingFor,
+      tags: tags.map((t: any) => ({ name: t.name, description: t.description, keywords: t.keywords, negative_keywords: [], color: t.color })),
+      config: { ...org.config, categories: (pack.categories || []).slice(0, 10).map(String), product_lines: (pack.product_lines || []).slice(0, 20).map(String) },
+    };
+    const playbooks = await draftPlaybooks(r, draftOrg as any, focus).catch((e: any) => { notes.push(`Could not draft the agent playbooks: ${e.message}`); return null; });
+
     res.json({
+      playbooks,
       summary: String(pack.summary || ''),
       offerings: (pack.offerings || []).slice(0, 12).map(String),
       target_customers: (pack.target_customers || []).slice(0, 12).map(String),
@@ -151,6 +163,7 @@ onboarding.post('/onboarding/profile-pack/approve', async (req, res) => {
       config: {
         categories: p.categories || [], tier_rules: p.tier_rules || [], presets: p.presets || [],
         cadence_days: p.cadence_days || {}, product_lines: p.product_lines || [], cities,
+        ...(p.playbooks ? { playbooks: sanitizePlaybooks(p.playbooks, null, 'onboarding') } : {}),
       },
       status: 'approved', approved_by: r.user.id, approved_at: new Date().toISOString(),
     }).eq('org_id', r.orgId);

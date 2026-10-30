@@ -3,6 +3,7 @@ import { canWrite, type AuthedRequest } from '../auth';
 import { chatStream } from '../llm';
 import { loadOrgContext } from '../org';
 import { agentSystemPrompt } from '../prompts/agent';
+import { playbookBlock, loadPlaybooks, refreshPlaybooks } from '../playbooks';
 import { assertWithinQuota, tokenSink } from '../usage';
 import { recall, memoryBlock } from '../memory';
 import { verifyReply } from './verify';
@@ -92,6 +93,7 @@ export async function runAgent(req: AuthedRequest, body: Body, emit: (e: AgentEv
         + (recalled.length
           ? `\n\nWhat this organisation already knows (memories). Use them, and cite the ones you rely on as [m:xxxxxxxx] using the id shown. Memories marked unverified have no confirmed source: say so if you use them.\n${memoryBlock(recalled as any)}`
           : '\n\nNo stored memories matched this message.')
+        + playbookBlock(loadPlaybooks(org))
         + screenContextBlock(ui, state, selectedClient),
     },
     ...(past ?? []).reverse().map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
@@ -213,6 +215,8 @@ export async function runAgent(req: AuthedRequest, body: Body, emit: (e: AgentEv
     status: failed ? (failed === 'stopped' ? 'stopped' : 'failed') : 'done', tokens_in: tokensIn, tokens_out: tokensOut, ended_at: new Date().toISOString(),
   }).eq('id', state.runId).eq('org_id', orgId);
   emit({ type: 'done', threadId: threadId!, messageId: saved.data?.id ?? '' });
+  // Keep the playbooks current: at most every few hours, and only after enough new searching, saving and asking.
+  if (!failed && canWrite(req.role)) refreshPlaybooks(req).catch((e) => console.warn('[playbooks] refresh failed:', e.message));
 }
 
 

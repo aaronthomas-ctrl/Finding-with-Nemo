@@ -6,6 +6,7 @@ import { Settings as SettingsIcon, Save, Download, Upload, Trash2, AlertTriangle
 import { exportClientsCsv, exportEnquiriesCsv, exportInteractionsCsv, exportCampaignsCsv, exportFullJson, importFullJson, clearAllData } from '../lib/backup';
 import { renderTemplate } from '../lib/templates';
 import { AdminPanels } from './AdminPanels';
+import { PlaybooksPanel } from './PlaybooksPanel';
 
 export function SettingsView() {
   const settingsData = useLiveQuery(() => db.settings.get('default'));
@@ -220,6 +221,7 @@ export function SettingsView() {
 
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-8 custom-scrollbar">
 
+        <PlaybooksPanel />
         <AdminPanels />
 
         <section className="bg-[#12151a] border border-slate-800 p-6 rounded-xl">
