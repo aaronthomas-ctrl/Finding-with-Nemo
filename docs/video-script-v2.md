@@ -82,7 +82,7 @@ Pre-open these tabs in this order so you only switch tabs, never hunt for pages 
 ### Scene 8: Close (2:42 to 2:55)
 **OPEN:** the README architecture picture on GitHub (`github.com/aaronthomas-ctrl/Finding-with-Nemo`), then the live app URL in the address bar.
 **DO:** Architecture picture from the README, then the repo link and the live URL.
-**SAY:** "Ultra, Super and Nano on Nebius Token Factory, with Supabase and Tavily underneath. Open source, Apache 2.0. A first step for anyone who needs to know what is around them: Finding with Nemo."
+**SAY:** "Three NVIDIA Nemotron models on Nebius Token Factory, each with a job: Ultra for careful reasoning and fact extraction, Super for the agent and the research briefs, Nano for the fast checks like route stops and flagging unsupported sentences. Embeddings power the memory. Supabase and Tavily sit underneath. Open source, Apache 2.0. A first step for anyone who needs to know what is around them: Finding with Nemo."
 **BADGE:** Nebius + NVIDIA Nemotron  |  Apache-2.0
 
 ---
