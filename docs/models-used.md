@@ -33,10 +33,21 @@ Everything runs through one OpenAI-compatible API on **Nebius Token Factory**.
 | Predicted next need for a client (profile page) | **Ultra** | `server/predict.ts` |
 | Memory: every stored fact gets an embedding; questions find the closest ones; the 3D memory view | **Qwen3-Embedding-8B** | `server/memory.ts` |
 
-Not model calls: Google Maps (places, geocoding, directions) and Tavily (live web search and page reading).
+## Where Tavily is used (live web search and page reading)
+
+| Feature (where you see it) | Tavily call | What the model does with it |
+| --- | --- | --- |
+| Client profile, **Web research with citations** card | Search | Super writes findings; code keeps only those whose quote is on the source page |
+| Agent: "recent updates / news about this company" | Search (`research_company`) | Ultra extracts facts, each quote-checked; unverified ones are marked |
+| Onboarding: your website and public pages | Extract and search | Ultra drafts tags and search areas from the real pages |
+| Agent: fact-checking a statement | Search | Ultra decides supported, contradicted or not found |
+| Agent: finding projects (openings, tenders) | Search | Ultra extracts projects and companies |
+| Company insight summary | Search | Super summarises |
+
+Other non-model services: Google Maps (places, geocoding, directions) and Supabase (database, auth).
 
 ## What to say in the video (one breath, scene 8 or the opening)
-"Three NVIDIA Nemotron models run on Nebius Token Factory, each with a job. **Ultra** does the careful reasoning: onboarding and extracting facts that must be quote-checked. **Super** runs the agent and writes the answers and research briefs. **Nano** does the fast checks: picking route stops, suggesting tags, and flagging unsupported sentences. Embeddings on Token Factory power the memory."
+"Three NVIDIA Nemotron models run on Nebius Token Factory, each with a job. **Ultra** does the careful reasoning: onboarding and extracting facts that must be quote-checked. **Super** runs the agent and writes the answers and research briefs. **Nano** does the fast checks: picking route stops, suggesting tags, and flagging unsupported sentences. Embeddings on Token Factory power the memory. And **Tavily** brings in the live web, so every claim can point to a real page."
 
 ## Honest limits to state if asked
 - Speech recognition uses the browser's own recognition, not an NVIDIA speech model (Token Factory has no audio endpoint).
